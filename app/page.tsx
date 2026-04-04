@@ -163,7 +163,7 @@ function EditorToolbar({ exec }: { exec: (cmd: string, val?: string) => void }) 
 // ===================== COMPOSE VIEW =====================
 function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => void }) {
   const [provider, setProvider] = useState<EmailProvider>("resend");
-  const [from, setFrom] = useState("contact@crediwize.com");
+  const [from, setFrom] = useState("CrediWize <contact@crediwize.com>");
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [html, setHtml] = useState("");
@@ -587,7 +587,7 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   const [name, setName] = useState(""); const [subject, setSubject] = useState("");
   const [html, setHtml] = useState(""); const [listId, setListId] = useState("");
   const [provider, setProvider] = useState<EmailProvider>("resend");
-  const [fromName, setFromName] = useState("MailMax"); const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
+  const [fromName, setFromName] = useState("CrediWize"); const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
   const [scheduledAt, setScheduledAt] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
 
