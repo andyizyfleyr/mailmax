@@ -1071,9 +1071,9 @@ function DashboardView({ stats }: { stats: DashboardStats | null }) {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard value={fmt(stats.totalSent)} label="Emails envoyés" icon={<Send size={20} />} color="var(--electric)" delta="+12.5%" trend="up" />
-        <StatCard value={`${stats.openRate}%`} label="Taux d'ouverture" icon={<Eye size={20} />} color="var(--violet)" delta="+4.3%" trend="up" />
-        <StatCard value={`${stats.clickRate}%`} label="Taux de clic" icon={<MousePointer size={20} />} color="var(--amber)" delta="-1.2%" trend="down" />
-        <StatCard value={`${stats.unsubscribeRate}%`} label="Désabonnements" icon={<UserMinus size={20} />} color="var(--rose)" delta="-0.05%" trend="up" />
+        <StatCard value={fmt(stats.totalOpens)} label="Nombre d'ouverture" icon={<Eye size={20} />} color="var(--violet)" delta="+4.3%" trend="up" />
+        <StatCard value={fmt(stats.totalClicks)} label="Nombre de clic" icon={<MousePointer size={20} />} color="var(--amber)" delta="-1.2%" trend="down" />
+        <StatCard value={fmt(stats.totalUnsubs)} label="Désabonnements" icon={<UserMinus size={20} />} color="var(--rose)" delta="-0.05%" trend="up" />
       </div>
 
       {/* Main Stats Row */}

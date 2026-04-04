@@ -86,9 +86,9 @@ export interface BulkSendPayload {
 
 export interface DashboardStats {
   totalSent: number;
-  openRate: number;
-  clickRate: number;
-  unsubscribeRate: number;
+  totalOpens: number;
+  totalClicks: number;
+  totalUnsubs: number;
   recentActivity: { date: string; sent: number; opens: number; clicks: number }[];
   topCampaigns: { name: string; opens: number; clicks: number }[];
 }
