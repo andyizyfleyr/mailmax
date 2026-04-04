@@ -26,7 +26,7 @@ export async function runCampaign(campaignId: string) {
     const trackedHtml = injectTracking(personalizedHtml, emailId, baseUrl, contact.email);
 
     try {
-      await sendViaProvider({
+      const providerId = await sendViaProvider({
         provider: campaign.provider as any,
         from: `${campaign.from_name} <${campaign.from_email}>`,
         to: contact.email,
@@ -36,6 +36,7 @@ export async function runCampaign(campaignId: string) {
       
       await supabase.from("email_records").insert({
         id: emailId, campaign_id: campaignId, provider: campaign.provider,
+        provider_id: providerId,
         from: campaign.from_email, to: contact.email, subject: campaign.subject, status: "sent"
       });
       sent++;

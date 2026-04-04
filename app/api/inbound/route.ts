@@ -30,9 +30,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. FILTRAGE DES ÉVÉNEMENTS
-    if (event.type === "email.received" && event.data?.email_id) {
-      const { data: email, error: fetchErr } = await resend.emails.receiving.get(event.data.email_id);
+    // 2. GESTION DES ÉVÉNEMENTS (Inbound + Tracking)
+    const eventType = event.type;
+    const providerId = event.data?.email_id;
+
+    if (!providerId) {
+      return NextResponse.json({ success: true, message: "No provider ID found" });
+    }
+
+    // A. Emails entrants (Inbound)
+    if (eventType === "email.received") {
+      const { data: email, error: fetchErr } = await resend.emails.receiving.get(providerId);
 
       if (fetchErr) throw fetchErr;
       if (!email) throw new Error("No email found for this ID");
@@ -41,7 +49,7 @@ export async function POST(req: NextRequest) {
       let attachments: any[] = [];
       if (email.attachments && email.attachments.length > 0) {
         const { data: attList } = await resend.emails.receiving.attachments.list({ 
-          emailId: event.data.email_id 
+          emailId: providerId 
         });
         
         if (attList && Array.isArray(attList)) {
@@ -86,8 +94,61 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: "Email received and stored" });
     }
 
-    // Réponse par défaut pour les autres types d'événements (sent, delivered, etc.)
-    return NextResponse.json({ success: true, message: `Event ${event.type} processed (no-op)` });
+    // B. Statistiques (Tracking)
+    const trackingEvents = ["email.delivered", "email.opened", "email.clicked", "email.bounced"];
+    if (trackingEvents.includes(eventType)) {
+      // 1. Trouver le record correspondant
+      const { data: record } = await supabase
+        .from("email_records")
+        .select("id, campaign_id, opens, clicks")
+        .eq("provider_id", providerId)
+        .single();
+
+      if (!record) {
+        return NextResponse.json({ success: true, message: "Record not found for tracking" });
+      }
+
+      // 2. Mettre à jour le record
+      let updates: any = {};
+      if (eventType === "email.delivered") updates.status = "delivered";
+      if (eventType === "email.opened") {
+        updates.opens = (record.opens || 0) + 1;
+        // Ajouter un événement d'analytics
+        await supabase.from("analytics_events").insert({
+          email_id: record.id,
+          campaign_id: record.campaign_id,
+          type: "open",
+          email: event.data.to?.[0] || "unknown",
+        });
+      }
+      if (eventType === "email.clicked") {
+        updates.clicks = (record.clicks || 0) + 1;
+        await supabase.from("analytics_events").insert({
+          email_id: record.id,
+          campaign_id: record.campaign_id,
+          type: "click",
+          email: event.data.to?.[0] || "unknown",
+          url: event.data.click?.url,
+        });
+      }
+      if (eventType === "email.bounced") updates.status = "bounced";
+
+      await supabase.from("email_records").update(updates).eq("id", record.id);
+
+      // 3. Mettre à jour les stats globales de la campagne
+      if (["email.opened", "email.clicked"].includes(eventType)) {
+        const field = eventType === "email.opened" ? "stats_opens" : "stats_clicks";
+        const { data: camp } = await supabase.from("campaigns").select("stats_opens, stats_clicks").eq("id", record.campaign_id).single();
+        if (camp) {
+          const currentValue = (camp as any)[field] || 0;
+          await supabase.from("campaigns").update({ [field]: currentValue + 1 }).eq("id", record.campaign_id);
+        }
+      }
+
+      return NextResponse.json({ success: true, message: `Stats updated for ${eventType}` });
+    }
+
+    return NextResponse.json({ success: true, message: `Event ${eventType} processed (no-op)` });
 
   } catch (err: unknown) {
     const error = err instanceof Error ? err.message : String(err);
