@@ -109,6 +109,13 @@ function LoginGate({ onAuthorize }: { onAuthorize: () => void }) {
             Déverrouiller le système
           </button>
         </form>
+
+        {err && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] bg-[hsl(var(--rose)/0.9)] backdrop-blur-md border border-[hsl(var(--rose)/0.3)] p-4 rounded-xl flex items-center justify-center gap-3 animate-in slide-in-from-top-4 shadow-xl">
+             <XCircle size={18} className="text-white shrink-0" />
+             <p className="text-white text-xs font-bold uppercase tracking-widest">Accès Refusé : Clé Incorrecte</p>
+          </div>
+        )}
         
         <p className="text-[9px] font-mono text-[hsl(var(--dim))] text-center uppercase tracking-widest opacity-50">Authorized Personnel Only &bull; IP Logged</p>
       </div>
