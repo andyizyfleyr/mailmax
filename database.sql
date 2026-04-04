@@ -80,3 +80,19 @@ CREATE POLICY "Public Access" ON contacts FOR ALL USING (true);
 CREATE POLICY "Public Access" ON campaigns FOR ALL USING (true);
 CREATE POLICY "Public Access" ON email_records FOR ALL USING (true);
 CREATE POLICY "Public Access" ON analytics_events FOR ALL USING (true);
+
+-- Table: inbound_emails
+CREATE TABLE inbound_emails (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  from_email TEXT NOT NULL,
+  from_name TEXT,
+  "to" TEXT NOT NULL,
+  subject TEXT,
+  html TEXT,
+  text TEXT,
+  status TEXT DEFAULT 'unread' NOT NULL, -- 'unread', 'read', 'archived'
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+ALTER TABLE inbound_emails ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Access" ON inbound_emails FOR ALL USING (true);

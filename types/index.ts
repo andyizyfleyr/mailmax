@@ -92,3 +92,15 @@ export interface DashboardStats {
   recentActivity: { date: string; sent: number; opens: number; clicks: number }[];
   topCampaigns: { name: string; opens: number; clicks: number }[];
 }
+
+export interface InboundEmail {
+  id: string;
+  fromEmail: string;
+  fromName?: string;
+  to: string;
+  subject?: string;
+  html?: string;
+  text?: string;
+  status: "unread" | "read" | "archived";
+  timestamp: string;
+}

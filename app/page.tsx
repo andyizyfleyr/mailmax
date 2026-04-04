@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import {
-  LayoutDashboard, Send, Users, Megaphone, History, Settings,
+  LayoutDashboard, Send, Users, Megaphone, History, Settings, Inbox,
   Zap, Plus, Trash2, Upload, CheckCircle, XCircle, Clock,
   Mail, Eye, MousePointer, UserMinus, ChevronDown, ChevronRight,
   Paperclip, X, Loader2, BarChart2, TrendingUp, Search,
@@ -16,11 +16,11 @@ import {
 } from "recharts";
 import {
   EmailProvider, Contact, ContactList, Campaign, EmailRecord,
-  DashboardStats, EmailAttachment
+  DashboardStats, EmailAttachment, InboundEmail
 } from "@/types";
 
 // ===================== TYPES =====================
-type View = "dashboard" | "compose" | "contacts" | "campaigns" | "history";
+type View = "dashboard" | "compose" | "contacts" | "campaigns" | "history" | "inbox";
 const PROVIDERS: EmailProvider[] = ["resend"];
 const PROVIDER_LABELS: Record<EmailProvider, string> = { resend: "Resend" };
 
@@ -800,6 +800,109 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   );
 }
 
+// ===================== INBOX VIEW =====================
+function InboxView({ emails, onRefresh }: { emails: InboundEmail[]; onRefresh: () => void }) {
+  const [filter, setFilter] = useState("all");
+  const [selectedEmail, setSelectedEmail] = useState<InboundEmail | null>(null);
+  const filtered = emails.filter(e => filter === "all" || e.status === filter);
+
+  async function updateStatus(id: string, status: string) {
+    await fetch("/api/inbound", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status })
+    });
+    onRefresh();
+    if (selectedEmail?.id === id) setSelectedEmail(prev => prev ? { ...prev, status: status as any } : null);
+  }
+
+  async function deleteEmail(id: string) {
+    if (!confirm("Supprimer cet email ?")) return;
+    await fetch(`/api/inbound?id=${id}`, { method: "DELETE" });
+    onRefresh();
+    if (selectedEmail?.id === id) setSelectedEmail(null);
+  }
+
+  return (
+    <div className="animate-in pb-12">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="font-display font-bold text-2xl text-white">Boîte de Réception</h2>
+          <p className="text-sm text-[hsl(var(--muted))]">Gérez vos communications entrantes en temps réel</p>
+        </div>
+        <div className="flex items-center gap-2 bg-[hsl(var(--s2))] p-1 rounded-xl border border-[hsl(var(--border))]">
+          {["all", "unread", "read", "archived"].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-widest transition-all ${filter === f ? "bg-[hsl(var(--s3))] text-[hsl(var(--electric))] shadow-sm" : "text-[hsl(var(--dim))] hover:text-white"}`}>
+              {f === "all" ? "Tous" : f === "unread" ? "Non lus" : f === "read" ? "Lus" : "Archivés"}
+            </button>
+          ))}
+          <div className="w-[1px] h-4 bg-[hsl(var(--border))] mx-1" />
+          <button onClick={onRefresh} className="p-2 text-[hsl(var(--dim))] hover:text-white transition-colors"><RefreshCw size={14} /></button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className={`card !p-0 overflow-hidden border-[hsl(var(--border))] ${selectedEmail ? "lg:col-span-5" : "lg:col-span-12"}`}>
+          <div className="table-row font-mono text-[10px] tracking-widest uppercase bg-[hsl(var(--s1)/0.5)] !py-4" 
+               style={{ gridTemplateColumns: selectedEmail ? "140px 1fr 100px" : "140px 1.5fr 2fr 100px 140px", color: "hsl(var(--dim))" }}>
+            <span>Expéditeur</span><span>Sujet</span>{!selectedEmail && <span>Message</span>}<span>Statut</span><span className="text-right pr-6">Date</span>
+          </div>
+          
+          {filtered.length === 0 ? (
+            <div className="py-24 text-center bg-gradient-to-b from-transparent to-[hsl(var(--s2)/0.2)]">
+              <Mail size={48} className="mx-auto mb-6 opacity-10 text-white" />
+              <p className="text-sm font-bold text-white mb-1">Boîte vide</p>
+              <p className="text-xs text-[hsl(var(--muted))]">Aucun message ne correspond à vos critères.</p>
+            </div>
+          ) : (
+            filtered.map((e, i) => (
+              <div key={e.id} onClick={() => { setSelectedEmail(e); if (e.status === "unread") updateStatus(e.id, "read"); }}
+                   className={`table-row !py-5 hover:bg-[hsl(var(--electric)/0.02)] transition-colors group cursor-pointer ${selectedEmail?.id === e.id ? "bg-[hsl(var(--electric)/0.05)] border-l-2 border-l-[hsl(var(--electric))]" : ""}`} 
+                   style={{ gridTemplateColumns: selectedEmail ? "140px 1fr 100px" : "140px 1.5fr 2fr 100px 140px", animationDelay: `${i * 0.02}s` }}>
+                <span className={`truncate font-bold text-[12px] group-hover:text-white transition-colors pr-4 ${e.status === "unread" ? "text-white" : "text-[hsl(var(--dim))]"}`}>{e.fromName || e.fromEmail}</span>
+                <span className={`truncate pr-4 text-[13px] ${e.status === "unread" ? "text-white font-bold" : "text-[hsl(var(--muted))]"}`}>{e.subject}</span>
+                {!selectedEmail && <span className="truncate text-[11px] text-[hsl(var(--dim))] pr-4">{e.text}</span>}
+                <span className="flex items-center gap-1.5"><StatusBadge s={e.status} /></span>
+                <span className="text-[11px] font-mono text-[hsl(var(--dim))] text-right pr-6">{relTime(e.timestamp)}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        {selectedEmail && (
+          <div className="lg:col-span-7 card p-8 space-y-6 animate-in slide-in-from-right-4">
+            <div className="flex items-start justify-between border-b border-[hsl(var(--border))] pb-6">
+              <div className="space-y-1">
+                <h3 className="font-display font-bold text-xl text-white">{selectedEmail.subject}</h3>
+                <div className="flex items-center gap-3 text-[11px] font-mono">
+                  <span className="text-[hsl(var(--dim))] uppercase">De :</span> 
+                  <span className="text-[hsl(var(--electric))]">{selectedEmail.fromName ? `${selectedEmail.fromName} <${selectedEmail.fromEmail}>` : selectedEmail.fromEmail}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => updateStatus(selectedEmail.id, selectedEmail.status === "archived" ? "read" : "archived")} 
+                        className="btn btn-ghost !p-2" title={selectedEmail.status === "archived" ? "Désarchiver" : "Archiver"}>
+                  <Download size={16} />
+                </button>
+                <button onClick={() => deleteEmail(selectedEmail.id)} className="btn btn-ghost !p-2 text-[hsl(var(--rose))]" title="Supprimer">
+                  <Trash2 size={16} />
+                </button>
+                <button onClick={() => setSelectedEmail(null)} className="btn btn-ghost !p-2" title="Fermer">
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-8 min-h-[400px] text-zinc-900 overflow-auto leading-relaxed"
+                 dangerouslySetInnerHTML={{ __html: selectedEmail.html || `<div class="font-sans whitespace-pre-wrap">${selectedEmail.text}</div>` }} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ===================== HISTORY VIEW =====================
 function HistoryView({ records, onRefresh }: { records: EmailRecord[]; onRefresh: () => void }) {
   const [filter, setFilter] = useState("all");
@@ -1001,22 +1104,25 @@ export default function MailerFindApp() {
   const [lists, setLists] = useState<ContactList[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [records, setRecords] = useState<EmailRecord[]>([]);
+  const [inbound, setInbound] = useState<InboundEmail[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   async function fetchAll() {
     try {
-      const [a, c, camp, h] = await Promise.all([
+      const [a, c, camp, h, inc] = await Promise.all([
         fetch("/api/analytics").then(r => r.json()),
         fetch("/api/contacts").then(r => r.json()),
         fetch("/api/campaigns").then(r => r.json()),
         fetch("/api/send-email").then(r => r.json()),
+        fetch("/api/inbound").then(r => r.json()),
       ]);
       setStats(a);
       setContacts(c.contacts || []);
       setLists(c.lists || []);
       setCampaigns(Array.isArray(camp) ? camp : []);
       setRecords(Array.isArray(h) ? h : []);
+      setInbound(Array.isArray(inc) ? inc : []);
     } catch (err) {
       console.error("Failed to fetch data:", err);
     }
@@ -1031,6 +1137,7 @@ export default function MailerFindApp() {
 
   const NAV = [
     { id: "dashboard", label: "Tableau de Bord", icon: <LayoutDashboard size={20} /> },
+    { id: "inbox", label: "Réception", icon: <Inbox size={20} /> },
     { id: "compose", label: "Rédacteur", icon: <Send size={20} /> },
     { id: "contacts", label: "Audience", icon: <Users size={20} /> },
     { id: "campaigns", label: "Campagnes", icon: <Megaphone size={20} /> },
@@ -1128,6 +1235,7 @@ export default function MailerFindApp() {
         <div className="px-10 py-8 max-w-7xl mx-auto w-full flex-1">
           <div className="animate-in fade-in duration-700">
             {view === "dashboard" && <DashboardView stats={stats} />}
+            {view === "inbox" && <InboxView emails={inbound} onRefresh={fetchAll} />}
             {view === "compose" && <ComposeView lists={lists} onSent={fetchAll} />}
             {view === "contacts" && <ContactsView contacts={contacts} lists={lists} onRefresh={fetchAll} />}
             {view === "campaigns" && <CampaignsView campaigns={campaigns} lists={lists} contacts={contacts} onRefresh={fetchAll} />}
