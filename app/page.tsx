@@ -167,7 +167,7 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
           <h2 className="font-display font-black text-3xl text-white tracking-tighter uppercase italic">Email Studio</h2>
           <div className="flex items-center gap-3">
              <div className="w-2 h-2 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_8px_hsl(var(--electric))]" />
-             <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.2em] font-bold">Resend Engine &bull; Ready to transmit</p>
+             <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.2em] font-bold">V-Core Engine &bull; Ready to transmit</p>
           </div>
         </div>
         <div className="flex bg-[hsl(var(--s2))] p-1 rounded-xl border border-[hsl(var(--border))]">
@@ -1080,18 +1080,6 @@ export default function MailerFindApp() {
 
         {/* Account Summary & Collapse Toggle */}
         <div className="p-4 space-y-4">
-           {!isSidebarCollapsed && (
-             <div className="p-5 rounded-2xl bg-gradient-to-br from-[hsl(var(--s2))] to-transparent border border-[hsl(var(--border))] animate-in slide-in-from-bottom-4 duration-500 fill-mode-forwards">
-               <div className="flex justify-between items-end mb-3">
-                 <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] font-bold">Quota Mensuel</div>
-                 <div className="text-xs font-black text-white">84%</div>
-               </div>
-               <div className="h-2 w-full bg-[hsl(var(--s1))] rounded-full overflow-hidden border border-white/5">
-                 <div className="h-full bg-gradient-to-r from-[hsl(var(--electric))] to-[hsl(var(--violet))] rounded-full shadow-[0_0_10px_hsl(var(--electric)/0.2)]" style={{ width: '84%' }} />
-               </div>
-               <p className="text-[10px] mt-3 text-[hsl(var(--dim))] leading-snug font-medium">Reset automatique dans 8 jours.</p>
-             </div>
-           )}
            
            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
                    className="w-full h-12 flex items-center justify-center rounded-2xl bg-[hsl(var(--s2))] hover:bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white transition-all shadow-lg active:scale-95 group">
@@ -1167,7 +1155,7 @@ export default function MailerFindApp() {
             <div className="flex items-center gap-4 bg-[hsl(var(--s2))] py-3 px-6 rounded-2xl border border-[hsl(var(--border))] group hover:border-[hsl(var(--electric)/0.3)] transition-all">
               <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_10px_hsl(var(--electric))]" />
               <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase font-bold tracking-widest">
-                Connected to <span className="text-white">Resend API v1.2</span>
+                Connected to <span className="text-white">Cloud Engine v1.2</span>
               </div>
             </div>
           </div>
