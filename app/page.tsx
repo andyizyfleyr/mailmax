@@ -578,16 +578,21 @@ function ContactsView({ contacts, lists, onRefresh }: {
 }
 
 // ===================== CAMPAIGNS VIEW =====================
-// ===================== CAMPAIGNS VIEW =====================
-function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
-  campaigns: Campaign[]; lists: ContactList[]; contacts: Contact[]; onRefresh: () => void;
+function CampaignsView({ campaigns, lists, contacts, onRefresh }: { 
+  campaigns: Campaign[]; lists: ContactList[]; contacts: Contact[]; onRefresh: () => void 
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
-  const [name, setName] = useState(""); const [subject, setSubject] = useState("");
-  const [html, setHtml] = useState(""); const [listId, setListId] = useState("");
+
+  // Form State
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [html, setHtml] = useState("");
+  const [listId, setListId] = useState("");
   const [provider, setProvider] = useState<EmailProvider>("resend");
-  const [fromName, setFromName] = useState("CrediWize"); const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
+  const [fromName, setFromName] = useState("CrediWize"); 
+  const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
   const [scheduledAt, setScheduledAt] = useState("");
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -606,20 +611,12 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
     noClick: true, noKeyboard: true,
   });
 
-  const [step, setStep] = useState(1);
-
-  function execCmd(cmd: string, val?: string) {
-    document.execCommand(cmd, false, val);
-    if (editorRef.current) setHtml(editorRef.current.innerHTML);
-  }
-
   async function createCampaign() {
     if (!name || !subject || !listId || !fromEmail) {
       alert("⚠️ Tous les champs (Nom, Sujet, Audience, Expéditeur) sont requis !");
       return;
     }
     
-    // Check if it's a mockup ID
     if (!listId.includes("-") || listId === "list-1") {
       alert("❌ Vous utilisez une audience de démonstration. Veuillez d'abord créer une vraie Audience dans l'onglet 'Audience' !");
       return;
@@ -643,7 +640,7 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
 
       if (!scheduledAt && data.id) sendCampaign(data.id);
     } catch (err) {
-      alert("🌐 Erreur de connexion au serveur. Vérifiez votre build Vercel.");
+      alert("🌐 Erreur de connexion au serveur.");
     }
   }
 
@@ -658,268 +655,266 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   }
 
   async function deleteCampaign(id: string) {
-    if (!confirm("Supprimer cette campagne et son historique ?")) return;
-    await fetch("/api/campaigns", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (!confirm("Supprimer cette campagne ?")) return;
+    await fetch("/api/campaigns", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
     onRefresh();
   }
 
-  const steps = [
-    { n: 1, label: "Audience", icon: <Users size={14} /> },
-    { n: 2, label: "Expéditeur", icon: <UserMinus size={14} /> },
-    { n: 3, label: "Contenu", icon: <Mail size={14} /> },
-  ];
+  function execCmd(cmd: string, val?: string) {
+    document.execCommand(cmd, false, val);
+    if (editorRef.current) setHtml(editorRef.current.innerHTML);
+  }
 
   return (
-    <div className="animate-in space-y-6 pb-12">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display font-bold text-2xl text-white">Vos Campagnes</h2>
-          <p className="text-sm text-[hsl(var(--muted))]">Gérez et suivez vos performances d'envois groupés</p>
+    <div className="animate-in space-y-10 pb-20 max-w-7xl mx-auto">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <h2 className="font-display font-black text-4xl text-white tracking-tighter uppercase italic leading-none">Commandes de Campagnes</h2>
+          <div className="flex items-center gap-3">
+             <div className="w-2 h-2 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_10px_hsl(var(--electric))]" />
+             <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.3em] font-bold">V-Core Engine &bull; {campaigns.length} unités actives</p>
+          </div>
         </div>
-        <button onClick={() => { setStep(1); setShowCreate(true); }} className="btn btn-primary">
-          <Plus size={18} /> Nouvelle campagne
+        <button onClick={() => { setStep(1); setShowCreate(true); }} className="btn btn-primary px-8 py-4 !rounded-2xl shadow-[0_20px_40px_-10px_hsl(var(--electric)/0.3)] group">
+          <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+          Nouv. Campagne
         </button>
       </div>
 
       {campaigns.length === 0 ? (
-        <div className="card py-24 flex flex-col items-center justify-center text-center bg-gradient-to-b from-[hsl(var(--s2))] to-transparent">
-          <div className="w-16 h-16 rounded-2xl bg-[hsl(var(--s3))] flex items-center justify-center text-[hsl(var(--muted))] mb-6 border border-[hsl(var(--border))]">
-            <Megaphone size={32} />
-          </div>
-          <h3 className="text-lg font-bold text-white mb-2">Aucune campagne active</h3>
-          <p className="text-sm text-[hsl(var(--muted))] max-w-sm mb-8">Lancez votre première campagne et commencez à engager vos contacts dès maintenant.</p>
-          <button onClick={() => { setStep(1); setShowCreate(true); }} className="btn btn-ghost px-8">
-            Créer ma première campagne
-          </button>
+        <div className="card !bg-transparent border-dashed border-2 py-32 flex flex-col items-center justify-center text-center space-y-6">
+           <div className="w-24 h-24 rounded-full bg-[hsl(var(--s1))] flex items-center justify-center text-[hsl(var(--dim))]">
+              <Megaphone size={40} strokeWidth={1} />
+           </div>
+           <div className="space-y-1">
+             <h3 className="text-white font-bold">Aucune campagne à l'horizon</h3>
+             <p className="text-sm text-[hsl(var(--muted))]">Commencez par créer votre première transmission pour engager votre audience.</p>
+           </div>
+           <button onClick={() => { setStep(1); setShowCreate(true); }} className="btn btn-ghost !rounded-xl">Lancer une campagne</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {campaigns.map((c, i) => (
-            <div key={c.id} className="card p-0 overflow-hidden animate-in card-hover group" style={{ animationDelay: `${i * 0.05}s` }}>
-              <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x border-[hsl(var(--border))]" style={{ borderColor: "hsl(var(--border))" }}>
-                <div className="p-6 md:w-1/3 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                       <StatusBadge s={c.status} />
-                       <ProviderBadge p={c.provider} />
-                    </div>
-                    <h3 className="font-display font-bold text-lg text-white mb-1 truncate group-hover:text-[hsl(var(--electric))] transition-colors">{c.name}</h3>
-                    <p className="text-xs text-[hsl(var(--muted))] truncate mb-4">{c.subject}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {campaigns.map((c) => (
+            <div key={c.id} className="card group hover:border-[hsl(var(--electric)/0.3)] transition-all duration-500 relative flex flex-col overflow-hidden bg-gradient-to-br from-[hsl(var(--s1))] to-[hsl(var(--s2))]">
+               {/* Background Glow */}
+               <div className="absolute top-0 right-0 w-64 h-64 bg-radial-gradient from-[hsl(var(--electric)/0.03)] to-transparent pointer-events-none" />
+               
+               {/* Top Bar */}
+               <div className="p-6 pb-0 flex items-start justify-between relative z-10">
+                  <div className="space-y-2 max-w-[70%]">
+                     <div className="flex items-center gap-2">
+                        <StatusBadge s={c.status} />
+                        <ProviderBadge p={c.provider} />
+                     </div>
+                     <h3 className="font-display font-black text-xl text-white truncate leading-tight tracking-tight group-hover:text-[hsl(var(--electric))] transition-colors">{c.name}</h3>
+                     <p className="text-xs text-[hsl(var(--muted))] italic truncate">{c.subject}</p>
                   </div>
-                  
-                  <div className="flex items-center gap-2 pt-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => deleteCampaign(c.id)} className="w-10 h-10 rounded-xl bg-[hsl(var(--s3))] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--dim))] hover:text-[hsl(var(--rose))] hover:bg-[hsl(var(--rose)/0.1)] hover:border-[hsl(var(--rose)/0.2)] transition-all">
+                       <Trash2 size={16} />
+                     </button>
+                  </div>
+               </div>
+
+               {/* Stats Row */}
+               <div className="p-6 grid grid-cols-4 gap-4 relative z-10">
+                  {[
+                    { label: "Envois", val: c.stats.sent, icon: <Send size={12} />, color: "var(--electric)" },
+                    { label: "Ouverts", val: c.stats.opens, icon: <Eye size={12} />, color: "var(--violet)" },
+                    { label: "Clics", val: c.stats.clicks, icon: <MousePointer size={12} />, color: "var(--amber)" },
+                    { label: "Désabs.", val: c.stats.unsubscribes, icon: <UserMinus size={12} />, color: "var(--rose)" },
+                  ].map(s => (
+                    <div key={s.label} className="space-y-1">
+                       <div className="flex items-center gap-1.5 text-[9px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest font-bold">
+                          <span style={{ color: `hsl(${s.color})` }}>{s.icon}</span>
+                          {s.label}
+                       </div>
+                       <div className="text-lg font-black text-white font-mono">{fmt(s.val)}</div>
+                    </div>
+                  ))}
+               </div>
+
+               {/* Progress Section */}
+               <div className="px-6 pb-6 space-y-4 relative z-10 flex-1 flex flex-col justify-end">
+                  <div className="space-y-2">
+                     <div className="flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-widest">
+                        <span className="text-[hsl(var(--muted))]">Transmission Status</span>
+                        <span className="text-white">{c.stats.sent}/{c.stats.total} <span className="text-[hsl(var(--electric))]">({c.stats.total > 0 ? Math.round((c.stats.sent / c.stats.total) * 100) : 0}%)</span></span>
+                     </div>
+                     <div className="h-1.5 w-full bg-[hsl(var(--s3))] rounded-full overflow-hidden p-[1px]">
+                        <div className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--electric))] to-[hsl(var(--violet))] shadow-[0_0_10px_hsl(var(--electric)/0.3)] transition-all duration-1000" 
+                             style={{ width: `${c.stats.total > 0 ? (c.stats.sent / c.stats.total) * 100 : 0}%` }} />
+                     </div>
+                  </div>
+
+                  {c.errorMessage && (
+                    <div className="p-3 rounded-xl bg-[hsl(var(--rose)/0.1)] border border-[hsl(var(--rose)/0.2)] flex items-start gap-3 animate-in slide-in-from-left duration-500">
+                      <XCircle size={14} className="text-[hsl(var(--rose))] shrink-0 mt-0.5" />
+                      <div className="text-[10px] text-[hsl(var(--rose))] font-mono font-bold leading-tight uppercase tracking-tighter">
+                        Diagnostic: {c.errorMessage}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
                     {(c.status === "draft" || c.status === "failed") && (
-                      <button onClick={() => sendCampaign(c.id)} disabled={sending === c.id} className="btn btn-primary !py-2 !px-4 text-xs flex-1">
-                        {sending === c.id ? <><Loader2 size={12} className="spin" /> Envoi…</> : <><Play size={12} /> {c.status === "failed" ? "Réessayer" : "Lancer"}</>}
+                      <button onClick={() => sendCampaign(c.id)} disabled={sending === c.id} 
+                        className="btn btn-primary w-full py-4 !rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_10px_20px_hsl(var(--electric)/0.2)] group/btn">
+                        {sending === c.id ? <><Loader2 size={14} className="spin" /> Séquençage...</> : <><Play size={14} className="group-hover/btn:scale-125 transition-transform" /> {c.status === "failed" ? "Relancer" : "Lancer la transmission"}</>}
                       </button>
                     )}
-                    {c.scheduledAt && c.status === "scheduled" && (
-                      <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[hsl(var(--blue) / 0.1)] text-[hsl(var(--blue))] text-[10px] font-bold font-mono">
-                        <Clock size={12} /> {new Date(c.scheduledAt).toLocaleString("fr-FR", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {c.status === "sending" && (
+                      <div className="w-full py-4 rounded-xl bg-[hsl(var(--amber)/0.1)] border border-[hsl(var(--amber)/0.2)] flex items-center justify-center gap-3 text-[hsl(var(--amber))] text-[10px] font-black uppercase tracking-widest animate-pulse">
+                        <RefreshCw size={14} className="spin" /> Synchronisation Resend...
                       </div>
                     )}
-                    <button onClick={() => deleteCampaign(c.id)} className="btn btn-danger !p-2 rounded-lg"><Trash2 size={14} /></button>
+                    {c.status === "sent" && (
+                      <div className="w-full py-4 rounded-xl bg-[hsl(var(--electric)/0.05)] border border-[hsl(var(--electric)/0.1)] flex items-center justify-center gap-3 text-[hsl(var(--electric))] text-[10px] font-black uppercase tracking-widest">
+                        <CheckCircle size={14} /> Mission Terminée
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                <div className="p-6 md:flex-1 bg-[hsl(var(--s1) / 0.3)]">
-                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-                      {[
-                        { label: "Emails", val: c.stats.total, icon: <Send />, color: "var(--electric)" },
-                        { label: "Ouverts", val: c.stats.opens, icon: <Eye />, color: "var(--violet)" },
-                        { label: "Clics", val: c.stats.clicks, icon: <MousePointer />, color: "var(--amber)" },
-                        { label: "Désabs.", val: c.stats.unsubscribes, icon: <UserMinus />, color: "var(--rose)" },
-                      ].map(s => (
-                        <div key={s.label}>
-                          <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest mb-1">{s.label}</div>
-                          <div className="text-xl font-bold text-white font-mono">{s.val}</div>
-                        </div>
-                      ))}
-                   </div>
-                   
-                   {c.errorMessage && (
-                      <div className="mt-4 p-3 rounded-lg bg-[hsl(var(--rose)/0.1)] border border-[hsl(var(--rose)/0.2)] flex items-start gap-3">
-                        <XCircle size={16} className="text-[hsl(var(--rose))] shrink-0 mt-0.5" />
-                        <div className="text-[11px] text-[hsl(var(--rose))] font-mono leading-tight">
-                          <span className="font-bold uppercase block mb-1">Erreur d'envoi :</span>
-                          {c.errorMessage}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="space-y-4 pt-2 border-t border-[hsl(var(--border))] mt-6">
-                      <div className="flex justify-between items-center text-[11px] font-mono">
-                        <span className="text-[hsl(var(--muted))] uppercase">Progression de l'envoi</span>
-                        <span className="text-white">{c.stats.sent}/{c.stats.total} envoyés ({c.stats.total > 0 ? Math.round((c.stats.sent/c.stats.total)*100) : 0}%)</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-[hsl(var(--s2))] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--electric))] to-[hsl(var(--violet))] transition-all duration-1000" 
-                             style={{ width: `${c.stats.total > 0 ? (c.stats.sent / c.stats.total) * 100 : 0}%` }} />
-                      </div>
-                   </div>
-                </div>
-              </div>
+               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Create campaign modal - Multi-step */}
+      {/* CREATE MODAL */}
       {showCreate && (
-        <div className="overlay" onClick={e => e.target === e.currentTarget && setShowCreate(false)}>
-          <div className="modal flex flex-col shadow-2xl overflow-hidden" style={{ maxWidth: 640 }}>
-            <div className="h-1 bg-[hsl(var(--electric))]" />
-            {/* Header / Steps */}
-            <div className="p-8 pb-4">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h3 className="font-display font-bold text-2xl text-white tracking-tight">Nouvelle campagne</h3>
-                  <p className="text-xs text-[hsl(var(--muted))] mt-1 font-mono uppercase tracking-widest">Configuration de diffusion</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] font-inter font-bold px-2 py-1 rounded bg-[hsl(var(--s2))] border border-[hsl(var(--border))] text-[hsl(var(--muted))]">Step {step}/3</div>
+        <div className="overlay animate-in fade-in duration-300" onClick={e => e.target === e.currentTarget && setShowCreate(false)}>
+          <div className="modal flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden" style={{ maxWidth: 700 }}>
+            <div className="h-1.5 bg-gradient-to-r from-[hsl(var(--electric))] to-[hsl(var(--violet))]" />
+            
+            {/* Modal Header */}
+            <div className="p-8 border-b border-[hsl(var(--border))] flex items-center justify-between bg-gradient-to-b from-[hsl(var(--s2))] to-[hsl(var(--bg))]">
+              <div className="space-y-1">
+                <h2 className="text-white font-display font-black text-2xl uppercase italic leading-none tracking-tighter">Initialiser Mission</h2>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] animate-pulse" />
+                  <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest font-bold">Étape {step} sur 3</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                {steps.map((s, i) => (
-                  <div key={s.n} className="flex-1 flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-bold transition-all duration-500 ${step >= s.n ? "bg-[hsl(var(--electric))] text-[hsl(var(--bg))] shadow-[0_0_20px_hsl(var(--electric)/0.3)]" : "bg-[hsl(var(--s3))] text-[hsl(var(--dim))] border border-[hsl(var(--border))]"}`}>
-                      {step > s.n ? <CheckCircle size={18} /> : s.n}
-                    </div>
-                    {i < steps.length - 1 && <div className={`flex-1 h-[2px] rounded-full transition-colors duration-500 ${step > s.n ? "bg-[hsl(var(--electric))]" : "bg-[hsl(var(--border))]"}`} />}
-                  </div>
-                ))}
-              </div>
+              <button onClick={() => setShowCreate(false)} className="w-10 h-10 rounded-xl bg-[hsl(var(--s3))] flex items-center justify-center text-[hsl(var(--muted))] hover:text-white transition-colors">
+                <X size={20} />
+              </button>
             </div>
 
-            {/* Content Area */}
-            <div className="px-8 py-6 flex-1 overflow-y-auto" style={{ minHeight: 380 }}>
+            <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh]">
               {step === 1 && (
-                <div className="space-y-6 animate-in">
-                  <div className="grid grid-cols-1 gap-6">
-                    <div>
-                      <label className="label">Nom interne de la campagne *</label>
-                      <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Newsletter Fidélisation" />
-                      <p className="text-[10px] text-[hsl(var(--dim))] mt-2 italic font-mono">Visible uniquement par vous.</p>
+                <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                  <div className="space-y-2">
+                    <label className="label">Identifiant de Campagne</label>
+                    <input autoFocus className="input text-lg font-bold" placeholder="ex: Solde Hiver 2025" value={name} onChange={e => setName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="label">Sujet de Transmission</label>
+                    <input className="input" placeholder="ex: Profitez de 50% de réduction..." value={subject} onChange={e => setSubject(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="label">Nom Expéditeur</label>
+                      <input className="input" value={fromName} onChange={e => setFromName(e.target.value)} />
                     </div>
-                    <div>
-                      <label className="label">Cible & Audience *</label>
-                      <select className="input" value={listId} onChange={e => setListId(e.target.value)}>
-                        <option value="">Sélectionner une audience</option>
-                        {lists.map(l => <option key={l.id} value={l.id}>{l.name} ({contacts.filter(c=>c.listId===l.id).length} contacts)</option>)}
-                      </select>
+                    <div className="space-y-2">
+                      <label className="label">Email Expéditeur</label>
+                      <input className="input" value={fromEmail} onChange={e => setFromEmail(e.target.value)} />
                     </div>
                   </div>
                 </div>
               )}
 
               {step === 2 && (
-                <div className="space-y-8 animate-in">
-                  <div className="p-5 rounded-2xl bg-gradient-to-br from-[hsl(var(--s2))] to-transparent border border-[hsl(var(--border))]">
-                    <label className="label mb-4 opacity-50">Apparence dans la boîte de réception</label>
-                    <div className="flex items-center gap-4 bg-[hsl(var(--bg))] p-4 rounded-xl border border-[hsl(var(--border))]">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl text-white shadow-inner" 
-                           style={{ background: "linear-gradient(135deg, hsl(var(--violet)), hsl(var(--electric)))" }}>
-                        {(fromName || "M")[0].toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-white truncate">{fromName || "MailMax"}</span>
-                          <span className="text-[10px] text-[hsl(var(--dim))] font-mono">Maintenant</span>
-                        </div>
-                        <div className="text-[13px] text-white/90 font-semibold truncate mt-0.5">{subject || "(Objet de l'email)"}</div>
-                        <p className="text-[11px] text-[hsl(var(--dim))] truncate mt-0.5">Cliquez pour voir cet email incroyable...</p>
-                      </div>
+                <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                  <div className="space-y-2">
+                    <label className="label">Cible (Audience)</label>
+                    <select className="input h-14 font-bold" value={listId} onChange={e => setListId(e.target.value)}>
+                      <option value="">Sélectionner une audience</option>
+                      {lists.map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.name} ({contacts.filter(con => con.listId === l.id).length} contacts)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="label">Service de Relay</label>
+                    <div className="flex gap-3">
+                      {PROVIDERS.map(p => (
+                        <button key={p} onClick={() => setProvider(p)} 
+                          className={`flex-1 p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${provider === p ? 'bg-[hsl(var(--electric)/0.1)] border-[hsl(var(--electric))]' : 'bg-[hsl(var(--s2))] border-[hsl(var(--border))] opacity-50'}`}>
+                          <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${provider === p ? 'text-[hsl(var(--electric))]' : 'text-[hsl(var(--muted))]'}`}>{PROVIDER_LABELS[p]}</span>
+                          <span className="text-[hsl(var(--dim))] text-[9px] font-mono">Recommandé</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="label">Nom affiché</label>
-                      <input className="input" value={fromName} onChange={e => setFromName(e.target.value)} placeholder="MailMax" />
+                  <div className="space-y-2">
+                    <label className="label">Planification (Optionnel)</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-4 top-4 text-[hsl(var(--dim))]" size={18} />
+                      <input type="datetime-local" className="input !pl-12" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} />
                     </div>
-                    <div>
-                      <label className="label">Email de réponse *</label>
-                      <input className="input font-mono text-xs" value={fromEmail} onChange={e => setFromEmail(e.target.value)} placeholder="hello@domain.com" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="label">Objet de l'email *</label>
-                    <input className="input" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Votre cadeau vous attend !" />
                   </div>
                 </div>
               )}
 
               {step === 3 && (
-                <div className="space-y-6 animate-in">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="label m-0">Corps du message (HTML)</label>
-                      <div className="flex gap-2">
-                        {["name", "email"].map(v => (
-                          <button key={v} onClick={() => execCmd("insertText", `{{${v}}}`)} className="text-[9px] font-mono px-2 py-0.5 rounded bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white hover:border-[hsl(var(--border-glow))] transition-colors">
-                            {v}
-                          </button>
-                        ))}
+                <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                   <div className="space-y-2">
+                    <label className="label">Contenu HTML</label>
+                    <div className="rounded-2xl border border-[hsl(var(--border))] overflow-hidden bg-[hsl(var(--s1))]">
+                      <EditorToolbar exec={execCmd} />
+                      <div {...getRootProps()} className={`rich-editor p-6 relative ${isDragActive ? "bg-[hsl(var(--electric)/0.05)]" : ""}`}>
+                        <input {...getInputProps()} />
+                        <div ref={editorRef} contentEditable className="rich-editor" onInput={e => setHtml(e.currentTarget.innerHTML)} data-placeholder="Écrivez votre message ici..." />
+                        {isDragActive && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--bg)/0.5)] backdrop-blur-sm">
+                            <div className="flex flex-col items-center animate-bounce text-[hsl(var(--electric))]">
+                              <Upload size={32} />
+                              <span className="text-[10px] font-mono uppercase font-black">Larguer les fichiers</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="rounded-2xl overflow-hidden border border-[hsl(var(--border))] shadow-inner" style={{ background: "hsl(var(--s2))" }}>
-                      <EditorToolbar exec={execCmd} />
-                      <div ref={editorRef} contentEditable onInput={() => { if (editorRef.current) setHtml(editorRef.current.innerHTML); }}
-                        data-placeholder="Commencez à rédiger..." className="rich-editor px-6 py-6 text-sm" suppressContentEditableWarning style={{ minHeight: 180, maxHeight: 250, overflowY: 'auto' }} />
-                    </div>
                   </div>
-                  
-                  {/* Dropzone for Campaigns */}
-                  <div>
-                    <label className="label flex items-center gap-2 mb-3">
-                      <Paperclip size={14} className="text-[hsl(var(--electric))]" /> Pièces jointes
-                    </label>
-                    <div {...getRootProps()} className={`rounded-xl p-6 border-2 border-dashed transition-all cursor-pointer flex flex-col items-center gap-3 ${isDragActive ? "border-[hsl(var(--electric))] bg-[hsl(var(--electric)/0.05)]" : "border-[hsl(var(--border))] hover:border-[hsl(var(--dim))]"}`}>
-                      <input {...getInputProps()} />
-                      <Upload size={24} className={isDragActive ? "text-[hsl(var(--electric))]" : "text-[hsl(var(--dim))]"} />
-                      <p className="text-[9px] font-mono text-[hsl(var(--muted))] uppercase">Glissez vos fichiers ici</p>
-                    </div>
-                    {attachments.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mt-4">
+
+                  {attachments.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="label">Pièces Jointes ({attachments.length})</label>
+                      <div className="flex flex-wrap gap-2">
                         {attachments.map((a, i) => (
-                          <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[10px] font-mono">
-                            <span className="truncate flex-1 text-[hsl(var(--muted))]">{a.name}</span>
-                            <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="text-[hsl(var(--rose))] hover:scale-110 transition-transform ml-2">
-                              <X size={14} />
+                          <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[hsl(var(--s2))] border border-[hsl(var(--border))] group/att">
+                            <Paperclip size={12} className="text-[hsl(var(--dim))]" />
+                            <span className="text-[10px] font-mono text-white max-w-[100px] truncate">{a.name}</span>
+                            <button onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))} className="text-[hsl(var(--dim))] hover:text-[hsl(var(--rose))]">
+                              <X size={12} />
                             </button>
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-[hsl(var(--s2) / 0.3)] border border-dashed border-[hsl(var(--border))]">
-                    <label className="label flex items-center gap-2 mb-4">
-                      <Calendar size={14} className="text-[hsl(var(--electric))]" /> Planification optionnelle
-                    </label>
-                    <input type="datetime-local" className="input" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} style={{ colorScheme: "dark" }} />
-                    <p className="text-[10px] text-[hsl(var(--dim))] mt-3 italic font-mono uppercase tracking-tighter">Laissez vide pour lancer maintenant.</p>
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Footer Buttons */}
-            <div className="p-8 border-t border-[hsl(var(--border))] bg-[hsl(var(--s1) / 0.3)] flex gap-4">
-              {step > 1 ? (
-                <button onClick={() => setStep(step - 1)} className="btn btn-ghost px-8">Retour</button>
-              ) : (
-                <button onClick={() => setShowCreate(false)} className="btn btn-ghost px-8">Annuler</button>
+            {/* Modal Footer */}
+            <div className="p-8 bg-[hsl(var(--s1))] border-t border-[hsl(var(--border))] flex gap-4">
+              {step > 1 && (
+                <button onClick={() => setStep(step - 1)} className="btn btn-ghost px-8 py-4 !rounded-xl">Précédent</button>
               )}
               {step < 3 ? (
-                <button onClick={() => { if (step === 1 && (!name || !listId)) return; if (step === 2 && (!fromEmail || !subject)) return; setStep(step + 1); }}
-                  className="btn btn-primary flex-1 justify-center">
-                  Continuer <ChevronRight size={18} />
-                </button>
+                <button onClick={() => setStep(step + 1)} className="btn btn-primary flex-1 justify-center !rounded-xl py-4 shadow-[0_15px_30px_hsl(var(--electric)/0.2)]">Continuer</button>
               ) : (
-                <button onClick={createCampaign} className="btn btn-primary flex-1 justify-center shadow-[0_0_30px_hsl(var(--electric)/0.2)]">
-                  {scheduledAt ? <><Calendar size={18} /> Planifier l'envoi</> : <><Zap size={18} /> Lancer la campagne</>}
+                <button onClick={createCampaign} className="btn btn-primary flex-1 justify-center !rounded-xl py-4 shadow-[0_15px_30px_hsl(var(--electric)/0.3)] group/launch">
+                  {scheduledAt ? <><Calendar size={18} /> Planifier Mission</> : <><Zap size={18} className="group-hover/launch:scale-125 transition-transform" /> Initialiser Transmission</>}
                 </button>
               )}
             </div>
