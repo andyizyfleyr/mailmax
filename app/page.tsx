@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import {
-  LayoutDashboard, Send, Users, Megaphone, History, Settings, Inbox,
+  LayoutDashboard, Send, Users, Megaphone, History, Settings, Inbox, Lock,
   Zap, Plus, Trash2, Upload, CheckCircle, XCircle, Clock,
   Mail, Eye, MousePointer, UserMinus, ChevronDown, ChevronRight,
   Paperclip, X, Loader2, BarChart2, TrendingUp, Search,
@@ -64,6 +64,54 @@ function StatCard({ value, label, icon, color, delta, trend = "up" }: {
       </div>
       {/* Subtle indicator beam */}
       <div className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity" />
+    </div>
+  );
+}
+
+// ===================== AUTH GATE =====================
+function LoginGate({ onAuthorize }: { onAuthorize: () => void }) {
+  const [pass, setPass] = useState("");
+  const [err, setErr] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pass === "Mail2000") {
+      localStorage.setItem("mailmax_auth", "true");
+      onAuthorize();
+    } else {
+      setErr(true);
+      setTimeout(() => setErr(false), 2000);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[hsl(var(--bg))] p-6">
+      <div className="absolute inset-0 bg-radial-gradient from-[hsl(var(--electric)/0.05)] to-transparent opacity-50" />
+      <div className="card max-w-md w-full p-10 space-y-8 relative overflow-hidden animate-in zoom-in-95 duration-500 shadow-2xl border-[hsl(var(--border))]">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--electric))] to-transparent" />
+        <div className="flex flex-col items-center text-center space-y-4">
+          <div className="w-20 h-20 rounded-3xl bg-[hsl(var(--s2))] flex items-center justify-center text-[hsl(var(--electric))] border border-[hsl(var(--electric)/0.2)] shadow-[0_0_40px_rgba(79,255,207,0.1)]">
+            <Lock size={32} />
+          </div>
+          <div className="space-y-1">
+            <h1 className="font-display font-black text-3xl text-white tracking-widest uppercase italic">MailMax</h1>
+            <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.3em] font-bold">V-CORE ENGINE &bull; ACCÈS RESTREINT</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-[hsl(var(--dim))] font-bold ml-1">Clé d'accès</label>
+            <input type="password" autoFocus className={`input w-full !bg-[hsl(var(--s1))] border-none shadow-inner py-4 text-center text-xl tracking-[0.5em] font-black ${err ? "animate-shake text-[hsl(var(--rose))]" : "text-white"}`}
+              value={pass} onChange={e => setPass(e.target.value)} placeholder="••••••••" />
+          </div>
+          <button type="submit" className="btn btn-primary w-full justify-center py-4 rounded-xl font-display font-black text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_-10px_hsl(var(--electric)/0.3)]">
+            Déverrouiller le système
+          </button>
+        </form>
+        
+        <p className="text-[9px] font-mono text-[hsl(var(--dim))] text-center uppercase tracking-widest opacity-50">Authorized Personnel Only &bull; IP Logged</p>
+      </div>
     </div>
   );
 }
@@ -1098,6 +1146,7 @@ function DashboardView({ stats }: { stats: DashboardStats | null }) {
 // ===================== MAIN APP =====================
 // ===================== MAIN APP =====================
 export default function MailerFindApp() {
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [view, setView] = useState<View>("dashboard");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -1129,6 +1178,7 @@ export default function MailerFindApp() {
   }
 
   useEffect(() => { 
+    if (localStorage.getItem("mailmax_auth") === "true") setIsAuthorized(true);
     fetchAll();
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
@@ -1145,6 +1195,8 @@ export default function MailerFindApp() {
   ] as const;
 
   const currentNav = NAV.find(n => n.id === view);
+
+  if (!isAuthorized) return <LoginGate onAuthorize={() => setIsAuthorized(true)} />;
 
   return (
     <div className="flex min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--muted))] font-inter">
