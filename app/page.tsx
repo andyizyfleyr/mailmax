@@ -164,15 +164,15 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
     <div className="animate-in max-w-5xl mx-auto space-y-8 pb-20">
       <div className="flex items-end justify-between border-b border-[hsl(var(--border))] pb-6">
         <div className="space-y-1">
-          <h2 className="font-display font-black text-3xl text-white tracking-tighter uppercase italic">Email Studio</h2>
+          <h2 className="font-display font-black text-3xl text-white tracking-tighter uppercase italic">Studio d'Email</h2>
           <div className="flex items-center gap-3">
              <div className="w-2 h-2 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_8px_hsl(var(--electric))]" />
-             <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.2em] font-bold">V-Core Engine &bull; Ready to transmit</p>
+             <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.2em] font-bold">Moteur V-Core &bull; Prêt à transmettre</p>
           </div>
         </div>
         <div className="flex bg-[hsl(var(--s2))] p-1 rounded-xl border border-[hsl(var(--border))]">
-          <button onClick={() => setPreview(false)} className={`px-5 py-2 rounded-lg text-[11px] font-mono uppercase tracking-widest transition-all ${!preview ? "bg-[hsl(var(--s3))] text-white shadow-lg" : "text-[hsl(var(--dim))] hover:text-white"}`}>Edit</button>
-          <button onClick={() => setPreview(true)} className={`px-5 py-2 rounded-lg text-[11px] font-mono uppercase tracking-widest transition-all ${preview ? "bg-[hsl(var(--s3))] text-white shadow-lg" : "text-[hsl(var(--dim))] hover:text-white"}`}>Preview</button>
+          <button onClick={() => setPreview(false)} className={`px-5 py-2 rounded-lg text-[11px] font-mono uppercase tracking-widest transition-all ${!preview ? "bg-[hsl(var(--s3))] text-white shadow-lg" : "text-[hsl(var(--dim))] hover:text-white"}`}>Éditer</button>
+          <button onClick={() => setPreview(true)} className={`px-5 py-2 rounded-lg text-[11px] font-mono uppercase tracking-widest transition-all ${preview ? "bg-[hsl(var(--s3))] text-white shadow-lg" : "text-[hsl(var(--dim))] hover:text-white"}`}>Aperçu</button>
         </div>
       </div>
 
@@ -181,9 +181,9 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
           {preview ? (
             <div className="card !p-0 overflow-hidden border-[hsl(var(--border))] animate-in zoom-in-95 duration-300">
                <div className="bg-[hsl(var(--s2))] p-6 border-b border-[hsl(var(--border))] space-y-3">
-                  <div className="flex items-center gap-3 text-[11px] font-mono"><span className="text-[hsl(var(--dim))] w-14 uppercase">From:</span> <span className="text-white font-bold">{from}</span></div>
-                  <div className="flex items-center gap-3 text-[11px] font-mono"><span className="text-[hsl(var(--dim))] w-14 uppercase">To:</span> <span className="text-white font-bold">{to || "(Destinataire)"}</span></div>
-                  <div className="flex items-center gap-3 text-sm font-bold"><span className="text-[hsl(var(--dim))] w-14 font-mono text-[11px] uppercase">Subj:</span> <span className="text-[hsl(var(--electric))]">{subject || "(Aucun sujet)"}</span></div>
+                  <div className="flex items-center gap-3 text-[11px] font-mono"><span className="text-[hsl(var(--dim))] w-14 uppercase">De :</span> <span className="text-white font-bold">{from}</span></div>
+                  <div className="flex items-center gap-3 text-[11px] font-mono"><span className="text-[hsl(var(--dim))] w-14 uppercase">À :</span> <span className="text-white font-bold">{to || "(Destinataire)"}</span></div>
+                  <div className="flex items-center gap-3 text-sm font-bold"><span className="text-[hsl(var(--dim))] w-14 font-mono text-[11px] uppercase">Sujet :</span> <span className="text-[hsl(var(--electric))]">{subject || "(Aucun sujet)"}</span></div>
                </div>
                <div className="bg-white p-12 min-h-[500px] text-zinc-900 shadow-inner overflow-auto leading-relaxed" 
                     dangerouslySetInnerHTML={{ __html: html || '<div class="text-zinc-300 italic">Aucun contenu à prévisualiser…</div>' }} />
@@ -219,7 +219,7 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
                 <div className="rounded-2xl overflow-hidden border border-[hsl(var(--border))] shadow-2xl bg-[hsl(var(--bg))]">
                    <EditorToolbar exec={execCmd} />
                    <div ref={editorRef} contentEditable onInput={() => { if (editorRef.current) setHtml(editorRef.current.innerHTML); }}
-                     data-placeholder="Start typing..." className="rich-editor min-h-[400px] px-10 py-10 outline-none leading-relaxed text-white/90" suppressContentEditableWarning />
+                     data-placeholder="Commencez à écrire..." className="rich-editor min-h-[400px] px-10 py-10 outline-none leading-relaxed text-white/90" suppressContentEditableWarning />
                 </div>
               </div>
             </div>
@@ -230,16 +230,16 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
           <div className="card p-8 space-y-8 bg-gradient-to-br from-[hsl(var(--s2))] to-transparent border-[hsl(var(--border))] sticky top-32">
              <div>
                 <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-white font-bold mb-6 flex items-center gap-2">
-                   <Zap size={14} className="text-[hsl(var(--electric))]" /> Settings
+                   <Zap size={14} className="text-[hsl(var(--electric))]" /> Paramètres
                 </h3>
                 
                 <div className="space-y-6">
                    <div>
-                      <label className="label-lite flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--dim))] mb-3"><Paperclip size={12} /> Attachments</label>
+                      <label className="label-lite flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--dim))] mb-3"><Paperclip size={12} /> Pièces jointes</label>
                       <div {...getRootProps()} className={`rounded-xl p-6 border-2 border-dashed transition-all cursor-pointer flex flex-col items-center gap-3 ${isDragActive ? "border-[hsl(var(--electric))] bg-[hsl(var(--electric)/0.05)]" : "border-[hsl(var(--border))] hover:border-[hsl(var(--dim))]"}`}>
                          <input {...getInputProps()} />
                          <Upload size={24} className={isDragActive ? "text-[hsl(var(--electric))]" : "text-[hsl(var(--dim))]"} />
-                         <p className="text-[9px] font-mono text-[hsl(var(--muted))] uppercase">Drop files</p>
+                         <p className="text-[9px] font-mono text-[hsl(var(--muted))] uppercase">Déposez vos fichiers</p>
                       </div>
                       {attachments.length > 0 && (
                          <div className="space-y-2 mt-4">
@@ -256,13 +256,13 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
                    </div>
 
                    <div className="pt-6 border-t border-[hsl(var(--border))]">
-                      <label className="label-lite flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--dim))] mb-3"><Calendar size={12} /> Scheduling</label>
+                      <label className="label-lite flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--dim))] mb-3"><Calendar size={12} /> Planification</label>
                       <input type="datetime-local" className="input !py-3 !text-xs !bg-[hsl(var(--bg))] border-none shadow-inner" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} style={{ colorScheme: "dark" }} />
                    </div>
 
                    <div className="pt-6">
                       <button onClick={handleSend} disabled={status === "loading"} className="btn btn-primary w-full justify-center py-4 rounded-xl shadow-[0_15px_40px_-5px_hsl(var(--electric)/0.3)] hover:translate-y-[-2px] active:translate-y-0 transition-all font-display font-black text-xs uppercase tracking-[0.2em]">
-                         {status === "loading" ? <Loader2 size={18} className="spin" /> : scheduledAt ? "Schedule" : "Transmit"}
+                         {status === "loading" ? <Loader2 size={18} className="spin" /> : scheduledAt ? "Planifier" : "Transmettre"}
                       </button>
                       {status !== "idle" && (
                          <div className={`mt-6 p-4 rounded-xl text-center text-[10px] font-mono font-bold uppercase tracking-widest animate-in slide-in-from-top-4 ${status === "success" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
@@ -276,9 +276,9 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
              <div className="p-5 rounded-2xl bg-[hsl(var(--s3)/0.5)] border border-[hsl(var(--border))] space-y-3">
                 <div className="flex items-center gap-2">
                    <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_8px_hsl(var(--electric))]" />
-                   <h4 className="text-[10px] font-mono text-white uppercase font-black">Optimization</h4>
+                   <h4 className="text-[10px] font-mono text-white uppercase font-black">Optimisation</h4>
                 </div>
-                <p className="text-[9px] text-[hsl(var(--muted))] leading-relaxed font-medium">Use <code className="text-white">{"{{name}}"}</code> variable for personalized transmission. Analysis suggests 24% higher engagement.</p>
+                <p className="text-[9px] text-[hsl(var(--muted))] leading-relaxed font-medium">Utilisez la variable <code className="text-white">{"{{name}}"}</code> pour personnaliser vos envois. L'analyse suggère un engagement 24% plus élevé.</p>
              </div>
           </div>
         </div>
@@ -938,7 +938,7 @@ function DashboardView({ stats }: { stats: DashboardStats | null }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-end mb-1">
                         <div className="text-[13px] font-bold text-white truncate">{c.name}</div>
-                        <div className="text-[11px] font-mono text-[hsl(var(--electric))]">{c.opens} open</div>
+                        <div className="text-[11px] font-mono text-[hsl(var(--electric))]">{c.opens} ouvertures</div>
                       </div>
                       <div className="h-1.5 w-full bg-[hsl(var(--s2))] rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-1000" 
@@ -1030,8 +1030,8 @@ export default function MailerFindApp() {
   }, []);
 
   const NAV = [
-    { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-    { id: "compose", label: "Composer", icon: <Send size={20} /> },
+    { id: "dashboard", label: "Tableau de Bord", icon: <LayoutDashboard size={20} /> },
+    { id: "compose", label: "Rédacteur", icon: <Send size={20} /> },
     { id: "contacts", label: "Audience", icon: <Users size={20} /> },
     { id: "campaigns", label: "Campagnes", icon: <Megaphone size={20} /> },
     { id: "history", label: "Historique", icon: <History size={20} /> },
@@ -1147,7 +1147,7 @@ export default function MailerFindApp() {
             </div>
             
             <nav className="flex items-center gap-12">
-              {['Status', 'Docs', 'Support', 'Legal'].map(l => (
+              {['Statut', 'Docs', 'Support', 'Légal'].map(l => (
                 <a key={l} href="#" className="text-[11px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] hover:text-[hsl(var(--electric))] font-bold transition-colors">{l}</a>
               ))}
             </nav>
