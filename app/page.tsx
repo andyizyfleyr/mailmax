@@ -111,9 +111,11 @@ function LoginGate({ onAuthorize }: { onAuthorize: () => void }) {
         </form>
 
         {err && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] bg-[hsl(var(--rose)/0.9)] backdrop-blur-md border border-[hsl(var(--rose)/0.3)] p-4 rounded-xl flex items-center justify-center gap-3 animate-in slide-in-from-top-4 shadow-xl">
-             <XCircle size={18} className="text-white shrink-0" />
-             <p className="text-white text-xs font-bold uppercase tracking-widest">Accès Refusé : Clé Incorrecte</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--bg)/0.8)] backdrop-blur-sm z-50 animate-in fade-in zoom-in-95 duration-200">
+             <div className="bg-[hsl(var(--rose))] p-6 rounded-2xl flex flex-col items-center gap-3 shadow-[0_20px_50px_rgba(251,113,133,0.3)] border border-[hsl(var(--rose)/0.2)]">
+                <XCircle size={32} className="text-white animate-bounce" />
+                <p className="text-white text-sm font-black uppercase tracking-[0.2em]">Accès Refusé</p>
+             </div>
           </div>
         )}
         
