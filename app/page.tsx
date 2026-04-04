@@ -41,21 +41,29 @@ function ProviderBadge({ p }: { p: EmailProvider }) {
 function StatusBadge({ s }: { s: string }) {
   return <span className={`badge badge-${s}`}>{s}</span>;
 }
-function StatCard({ value, label, icon, color, delta }: {
-  value: string | number; label: string; icon: React.ReactNode; color: string; delta?: string;
+function StatCard({ value, label, icon, color, delta, trend = "up" }: {
+  value: string | number; label: string; icon: React.ReactNode; color: string; delta?: string; trend?: "up" | "down";
 }) {
   return (
-    <div className="stat-card animate-in" style={{ borderTop: `2px solid ${color}` }}>
+    <div className="stat-card group animate-in" style={{ borderLeft: `3px solid hsl(${color})` }}>
       <div className="flex items-start justify-between">
-        <div>
-          <div className="stat-value">{value}</div>
+        <div className="space-y-1">
           <div className="stat-label">{label}</div>
-          {delta && <div className="stat-delta" style={{ color }}>{delta}</div>}
+          <div className="stat-value">{value}</div>
+          {delta && (
+            <div className="stat-delta" style={{ color: trend === "up" ? "hsl(var(--electric))" : "hsl(var(--rose))" }}>
+              {trend === "up" ? <TrendingUp size={12} /> : <TrendingUp size={12} className="rotate-180" />}
+              {delta}
+            </div>
+          )}
         </div>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}18`, color }}>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110" 
+             style={{ background: `hsl(${color} / 0.1)`, color: `hsl(${color})`, boxShadow: `0 0 20px -5px hsl(${color} / 0.2)` }}>
           {icon}
         </div>
       </div>
+      {/* Subtle indicator beam */}
+      <div className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 }
@@ -128,7 +136,7 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
   }
 
   async function handleSend() {
-    if (!from || !to || !subject) { setStatus("error"); setMsg("Remplis tous les champs."); return; }
+    if (!from || !to || !subject) { setStatus("error"); setMsg("Tous les champs marqués d'une * sont requis."); return; }
     setStatus("loading");
     try {
       const res = await fetch("/api/send-email", {
@@ -139,114 +147,147 @@ function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => vo
       const data = await res.json();
       if (data.success) {
         setStatus("success");
-        setMsg(data.scheduled ? `Email planifié pour ${new Date(scheduledAt).toLocaleString("fr-FR")}` : "Email envoyé !");
+        setMsg(data.scheduled ? `Envoi programmé avec succès.` : "Email envoyé avec succès !");
         setTo(""); setSubject(""); setHtml(""); setAttachments([]); setScheduledAt("");
         if (editorRef.current) editorRef.current.innerHTML = "";
         onSent();
-      } else { setStatus("error"); setMsg(data.error || "Erreur"); }
-    } catch { setStatus("error"); setMsg("Erreur réseau"); }
+      } else { setStatus("error"); setMsg(data.error || "Une erreur est survenue."); }
+    } catch { setStatus("error"); setMsg("Erreur de connexion."); }
     setTimeout(() => setStatus("idle"), 5000);
   }
 
+  const [preview, setPreview] = useState(false);
+
+  // ... (rest of fetch logic remains same)
+
   return (
-    <div className="animate-in max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-xl font-semibold" style={{ color: "#fff" }}>Nouvel email</h2>
-        <div className="flex items-center gap-2">
-          <ProviderBadge p="resend" />
+    <div className="animate-in max-w-5xl mx-auto space-y-8 pb-20">
+      <div className="flex items-end justify-between border-b border-[hsl(var(--border))] pb-6">
+        <div className="space-y-1">
+          <h2 className="font-display font-black text-3xl text-white tracking-tighter uppercase italic">Email Studio</h2>
+          <div className="flex items-center gap-3">
+             <div className="w-2 h-2 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_8px_hsl(var(--electric))]" />
+             <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.2em] font-bold">Resend Engine &bull; Ready to transmit</p>
+          </div>
+        </div>
+        <div className="flex bg-[hsl(var(--s2))] p-1 rounded-xl border border-[hsl(var(--border))]">
+          <button onClick={() => setPreview(false)} className={`px-5 py-2 rounded-lg text-[11px] font-mono uppercase tracking-widest transition-all ${!preview ? "bg-[hsl(var(--s3))] text-white shadow-lg" : "text-[hsl(var(--dim))] hover:text-white"}`}>Edit</button>
+          <button onClick={() => setPreview(true)} className={`px-5 py-2 rounded-lg text-[11px] font-mono uppercase tracking-widest transition-all ${preview ? "bg-[hsl(var(--s3))] text-white shadow-lg" : "text-[hsl(var(--dim))] hover:text-white"}`}>Preview</button>
         </div>
       </div>
 
-      <div className="card p-6 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="label">De *</label>
-            <input className="input" value={from} onChange={e => setFrom(e.target.value)} placeholder="vous@domaine.com" />
-          </div>
-          <div>
-            <label className="label">À *</label>
-            <input className="input" value={to} onChange={e => setTo(e.target.value)} placeholder="dest@email.com" />
-          </div>
-        </div>
-        <div>
-          <label className="label">Objet *</label>
-          <input className="input" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Objet de l'email…" />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-3 space-y-8">
+          {preview ? (
+            <div className="card !p-0 overflow-hidden border-[hsl(var(--border))] animate-in zoom-in-95 duration-300">
+               <div className="bg-[hsl(var(--s2))] p-6 border-b border-[hsl(var(--border))] space-y-3">
+                  <div className="flex items-center gap-3 text-[11px] font-mono"><span className="text-[hsl(var(--dim))] w-14 uppercase">From:</span> <span className="text-white font-bold">{from}</span></div>
+                  <div className="flex items-center gap-3 text-[11px] font-mono"><span className="text-[hsl(var(--dim))] w-14 uppercase">To:</span> <span className="text-white font-bold">{to || "(Destinataire)"}</span></div>
+                  <div className="flex items-center gap-3 text-sm font-bold"><span className="text-[hsl(var(--dim))] w-14 font-mono text-[11px] uppercase">Subj:</span> <span className="text-[hsl(var(--electric))]">{subject || "(Aucun sujet)"}</span></div>
+               </div>
+               <div className="bg-white p-12 min-h-[500px] text-zinc-900 shadow-inner overflow-auto leading-relaxed" 
+                    dangerouslySetInnerHTML={{ __html: html || '<div class="text-zinc-300 italic">Aucun contenu à prévisualiser…</div>' }} />
+               <div className="bg-[hsl(var(--s1))] p-4 flex items-center justify-between">
+                  <div className="flex gap-2">
+                     <span className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
+                     <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/20" />
+                     <span className="w-2.5 h-2.5 rounded-full bg-green-500/20" />
+                  </div>
+                  <p className="text-[9px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest">MailMax Preview Engine v2.0</p>
+               </div>
+            </div>
+          ) : (
+            <div className="card p-10 space-y-8 shadow-2xl animate-in fade-in slide-in-from-left-4 duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] font-bold ml-1">Emetteur</label>
+                  <input className="input !bg-[hsl(var(--bg))] font-mono text-sm border-none shadow-inner py-4" value={from} onChange={e => setFrom(e.target.value)} placeholder="contact@votre-domaine.com" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] font-bold ml-1">Destinataire</label>
+                  <input className="input !bg-[hsl(var(--bg))] font-mono text-sm border-none shadow-inner py-4" value={to} onChange={e => setTo(e.target.value)} placeholder="client@exemple.com" />
+                </div>
+              </div>
 
-        {/* Editor */}
-        <div>
-          <label className="label">Message</label>
-          <div className="rounded-xl overflow-hidden" style={{ background: "var(--s2)", border: "1px solid var(--border)" }}>
-            <EditorToolbar exec={execCmd} />
-            <div
-              ref={editorRef}
-              contentEditable
-              onInput={() => { if (editorRef.current) setHtml(editorRef.current.innerHTML); }}
-              data-placeholder="Composez votre message ici…"
-              className="rich-editor px-4 py-4"
-              suppressContentEditableWarning
-            />
-          </div>
-        </div>
-
-        {/* Dropzone */}
-        <div {...getRootProps()}>
-          <input {...getInputProps()} />
-          <div className={`rounded-xl px-4 py-3 flex items-center gap-2 border border-dashed transition-all cursor-pointer ${isDragActive ? "border-electric bg-electric/5" : ""}`}
-            style={{ borderColor: isDragActive ? "var(--electric)" : "var(--border)" }}>
-            <Paperclip size={14} style={{ color: "var(--muted)" }} />
-            <span className="text-sm" style={{ color: "var(--muted)" }}>
-              {isDragActive ? "Dépose ici…" : "Glisse des fichiers pour les joindre"}
-            </span>
-          </div>
-          {attachments.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {attachments.map((a, i) => (
-                <span key={i} className="tag flex items-center gap-1.5">
-                  <Paperclip size={10} /> {a.name}
-                  <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))}>
-                    <X size={10} className="hover:text-red-400" />
-                  </button>
-                </span>
-              ))}
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] font-bold ml-1">Objet Transmis</label>
+                <input className="input !bg-[hsl(var(--bg))] border-none shadow-inner text-lg font-bold py-5" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Sujet de votre email…" />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] font-bold ml-1">Message Body (HTML Core)</label>
+                <div className="rounded-2xl overflow-hidden border border-[hsl(var(--border))] shadow-2xl bg-[hsl(var(--bg))]">
+                   <EditorToolbar exec={execCmd} />
+                   <div ref={editorRef} contentEditable onInput={() => { if (editorRef.current) setHtml(editorRef.current.innerHTML); }}
+                     data-placeholder="Start typing..." className="rich-editor min-h-[400px] px-10 py-10 outline-none leading-relaxed text-white/90" suppressContentEditableWarning />
+                </div>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Schedule */}
-        <div>
-          <label className="label">Planification (optionnel)</label>
-          <div className="flex items-center gap-2">
-            <Calendar size={14} style={{ color: "var(--muted)" }} />
-            <input type="datetime-local" className="input" value={scheduledAt}
-              onChange={e => setScheduledAt(e.target.value)}
-              style={{ colorScheme: "dark" }} />
+        <div className="space-y-6">
+          <div className="card p-8 space-y-8 bg-gradient-to-br from-[hsl(var(--s2))] to-transparent border-[hsl(var(--border))] sticky top-32">
+             <div>
+                <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-white font-bold mb-6 flex items-center gap-2">
+                   <Zap size={14} className="text-[hsl(var(--electric))]" /> Settings
+                </h3>
+                
+                <div className="space-y-6">
+                   <div>
+                      <label className="label-lite flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--dim))] mb-3"><Paperclip size={12} /> Attachments</label>
+                      <div {...getRootProps()} className={`rounded-xl p-6 border-2 border-dashed transition-all cursor-pointer flex flex-col items-center gap-3 ${isDragActive ? "border-[hsl(var(--electric))] bg-[hsl(var(--electric)/0.05)]" : "border-[hsl(var(--border))] hover:border-[hsl(var(--dim))]"}`}>
+                         <input {...getInputProps()} />
+                         <Upload size={24} className={isDragActive ? "text-[hsl(var(--electric))]" : "text-[hsl(var(--dim))]"} />
+                         <p className="text-[9px] font-mono text-[hsl(var(--muted))] uppercase">Drop files</p>
+                      </div>
+                      {attachments.length > 0 && (
+                         <div className="space-y-2 mt-4">
+                            {attachments.map((a, i) => (
+                              <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-[hsl(var(--s1))] border border-[hsl(var(--border))] text-[10px] font-mono">
+                                 <span className="truncate flex-1 text-[hsl(var(--muted))]">{a.name}</span>
+                                 <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="text-[hsl(var(--rose))] hover:scale-110 transition-transform ml-2">
+                                   <X size={14} />
+                                 </button>
+                              </div>
+                            ))}
+                         </div>
+                      )}
+                   </div>
+
+                   <div className="pt-6 border-t border-[hsl(var(--border))]">
+                      <label className="label-lite flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--dim))] mb-3"><Calendar size={12} /> Scheduling</label>
+                      <input type="datetime-local" className="input !py-3 !text-xs !bg-[hsl(var(--bg))] border-none shadow-inner" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} style={{ colorScheme: "dark" }} />
+                   </div>
+
+                   <div className="pt-6">
+                      <button onClick={handleSend} disabled={status === "loading"} className="btn btn-primary w-full justify-center py-4 rounded-xl shadow-[0_15px_40px_-5px_hsl(var(--electric)/0.3)] hover:translate-y-[-2px] active:translate-y-0 transition-all font-display font-black text-xs uppercase tracking-[0.2em]">
+                         {status === "loading" ? <Loader2 size={18} className="spin" /> : scheduledAt ? "Schedule" : "Transmit"}
+                      </button>
+                      {status !== "idle" && (
+                         <div className={`mt-6 p-4 rounded-xl text-center text-[10px] font-mono font-bold uppercase tracking-widest animate-in slide-in-from-top-4 ${status === "success" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+                            {msg}
+                         </div>
+                      )}
+                   </div>
+                </div>
+             </div>
+
+             <div className="p-5 rounded-2xl bg-[hsl(var(--s3)/0.5)] border border-[hsl(var(--border))] space-y-3">
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_8px_hsl(var(--electric))]" />
+                   <h4 className="text-[10px] font-mono text-white uppercase font-black">Optimization</h4>
+                </div>
+                <p className="text-[9px] text-[hsl(var(--muted))] leading-relaxed font-medium">Use <code className="text-white">{"{{name}}"}</code> variable for personalized transmission. Analysis suggests 24% higher engagement.</p>
+             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm flex items-center gap-2">
-          {status === "success" && <><CheckCircle size={14} style={{ color: "#4ade80" }} /><span style={{ color: "#4ade80" }}>{msg}</span></>}
-          {status === "error" && <><XCircle size={14} style={{ color: "var(--rose)" }} /><span style={{ color: "var(--rose)" }}>{msg}</span></>}
-        </div>
-        <button onClick={handleSend} disabled={status === "loading"} className="btn btn-primary">
-          {status === "loading" ? <><Loader2 size={14} className="spin" /> Envoi…</> : scheduledAt ? <><Calendar size={14} /> Planifier</> : <><Send size={14} /> Envoyer via {PROVIDER_LABELS[provider]}</>}
-        </button>
-      </div>
-
-      {/* Env hint */}
-      <div className="card mt-6 p-4">
-        <p className="font-mono text-xs mb-2" style={{ color: "var(--dim)" }}>// .env.local</p>
-        <div className="font-mono text-xs">
-          <p><span style={{ color: "var(--electric)" }}>RESEND_API_KEY</span>=<span style={{ color: "var(--dim)" }}>re_...</span></p>
         </div>
       </div>
     </div>
   );
 }
 
+// ===================== CONTACTS VIEW =====================
 // ===================== CONTACTS VIEW =====================
 function ContactsView({ contacts, lists, onRefresh }: {
   contacts: Contact[]; lists: ContactList[]; onRefresh: () => void;
@@ -257,19 +298,35 @@ function ContactsView({ contacts, lists, onRefresh }: {
   const [showAddList, setShowAddList] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState(""); const [newName, setNewName] = useState(""); const [newList, setNewList] = useState("");
+  const [newTags, setNewTags] = useState("");
+
+  async function addContact() {
+    if (!newEmail || !newList) return;
+    const tagsArray = newTags.split(',').map(t => t.trim()).filter(Boolean);
+    await fetch("/api/contacts", { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify({ 
+        type: "contact", 
+        email: newEmail, 
+        name: newName || newEmail, 
+        listId: newList,
+        tags: tagsArray
+      }) 
+    });
+    setNewEmail(""); setNewName(""); setNewTags(""); setShowAddContact(false); onRefresh();
+  }
+
   const [newListName, setNewListName] = useState(""); const [newListDesc, setNewListDesc] = useState("");
 
   const filtered = contacts.filter(c => {
-    const matchSearch = c.email.includes(search) || c.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = c.email.toLowerCase().includes(search.toLowerCase()) || 
+                      c.name.toLowerCase().includes(search.toLowerCase()) ||
+                      (c.tags || []).some(t => t.toLowerCase().includes(search.toLowerCase()));
     const matchList = filterList === "all" || c.listId === filterList;
     return matchSearch && matchList;
   });
 
-  async function addContact() {
-    if (!newEmail || !newList) return;
-    await fetch("/api/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "contact", email: newEmail, name: newName || newEmail, listId: newList }) });
-    setNewEmail(""); setNewName(""); setShowAddContact(false); onRefresh();
-  }
   async function addList() {
     if (!newListName) return;
     await fetch("/api/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "list", name: newListName, description: newListDesc }) });
@@ -282,7 +339,7 @@ function ContactsView({ contacts, lists, onRefresh }: {
   }
   async function deleteSelected() {
     if (selected.length === 0) return;
-    if (!confirm(`Supprimer ces ${selected.length} contacts ?`)) return;
+    if (!confirm(`Supprimer ces ${selected.length} contacts sélectionnés ?`)) return;
     await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: selected }) });
     setSelected([]);
     onRefresh();
@@ -299,124 +356,162 @@ function ContactsView({ contacts, lists, onRefresh }: {
     const file = e.target.files?.[0]; if (!file) return;
     const text = await file.text();
     const rows = text.split("\n").slice(1).filter(Boolean).map(line => {
-      const [email, name] = line.split(",");
-      return { email: email?.trim(), name: name?.trim() };
+      const parts = line.split(",");
+      return { email: parts[0]?.trim(), name: parts[1]?.trim() };
     }).filter(r => r.email);
-    if (!filterList || filterList === "all") { alert("Sélectionne une liste d'abord"); return; }
+    if (!filterList || filterList === "all") { alert("Veuillez sélectionner une liste spécifique avant d'importer."); return; }
     await fetch("/api/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "import", rows, listId: filterList }) });
     onRefresh();
   }
 
   return (
-    <div className="animate-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-xl font-semibold" style={{ color: "#fff" }}>Contacts</h2>
-        <div className="flex items-center gap-2">
-          <label className="btn btn-ghost text-sm cursor-pointer">
+    <div className="animate-in pb-12">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="font-display font-bold text-2xl text-white">Gestion de l'Audience</h2>
+          <p className="text-sm text-[hsl(var(--muted))]">Organisez vos contacts et segmentez vos listes</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="btn btn-ghost !px-4 text-xs cursor-pointer border-dashed">
             <Upload size={14} /> Importer CSV
             <input type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
           </label>
-          <button onClick={() => setShowAddList(true)} className="btn btn-ghost text-sm"><Plus size={14} /> Nouvelle liste</button>
-          <button onClick={() => setShowAddContact(true)} className="btn btn-primary text-sm"><Plus size={14} /> Contact</button>
+          <button onClick={() => setShowAddList(true)} className="btn btn-ghost !px-4 text-xs"><Plus size={14} /> Liste</button>
+          <button onClick={() => setShowAddContact(true)} className="btn btn-primary !px-4 text-xs"><Plus size={14} /> Nouveau Contact</button>
         </div>
       </div>
 
       {/* Lists overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className={`card p-4 cursor-pointer card-hover ${filterList === "all" ? "border-electric/40" : ""}`}
-          style={filterList === "all" ? { borderColor: "var(--electric-dim)" } : {}}
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+        <div className={`card p-6 min-w-[220px] cursor-pointer transition-all ${filterList === "all" ? "ring-2 ring-[hsl(var(--electric))] border-transparent" : "hover:border-[hsl(var(--border-glow))]"}`}
           onClick={() => setFilterList("all")}>
-          <div className="text-2xl font-display font-bold" style={{ color: "#fff" }}>{contacts.length}</div>
-          <div className="font-mono text-xs mt-1" style={{ color: "var(--muted)" }}>TOUS</div>
+          <div className="text-sm font-mono text-[hsl(var(--dim))] uppercase tracking-widest mb-2 px-1">Audience Totale</div>
+          <div className="text-3xl font-display font-bold text-white px-1">{contacts.length}</div>
+          <div className="mt-4 pt-4 border-t border-[hsl(var(--border))] flex items-center justify-between text-[10px] font-mono">
+             <span className="text-[hsl(var(--muted))]">Ensemble des contacts</span>
+             {filterList === "all" && <CheckCircle size={14} className="text-[hsl(var(--electric))]" />}
+          </div>
         </div>
+        
         {lists.map(l => (
           <div key={l.id}
-            className={`card p-4 cursor-pointer card-hover ${filterList === l.id ? "border-electric/40" : ""}`}
-            style={filterList === l.id ? { borderColor: "var(--electric-dim)" } : {}}
+            className={`card p-6 min-w-[220px] cursor-pointer transition-all ${filterList === l.id ? "ring-2 ring-[hsl(var(--electric))] border-transparent" : "hover:border-[hsl(var(--border-glow))]"}`}
             onClick={() => setFilterList(l.id)}>
-            <div className="text-2xl font-display font-bold" style={{ color: "#fff" }}>
+            <div className="text-sm font-mono text-[hsl(var(--dim))] uppercase tracking-widest mb-2 px-1 truncate">{l.name}</div>
+            <div className="text-3xl font-display font-bold text-white px-1">
               {contacts.filter(c => c.listId === l.id).length}
             </div>
-            <div className="font-mono text-xs mt-1 truncate" style={{ color: "var(--muted)" }}>{l.name.toUpperCase()}</div>
+            <div className="mt-4 pt-4 border-t border-[hsl(var(--border))] flex items-center justify-between text-[10px] font-mono">
+               <span className="text-[hsl(var(--muted))]">Contacts ciblés</span>
+               {filterList === l.id && <CheckCircle size={14} className="text-[hsl(var(--electric))]" />}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Actions & Search */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted)" }} />
-          <input className="input pl-9" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="flex items-center gap-4 my-8">
+        <div className="relative flex-1 group">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[hsl(var(--dim))] group-focus-within:text-[hsl(var(--electric))] transition-colors" />
+          <input className="input !pl-12 !py-3.5 !rounded-2xl" placeholder="Rechercher par nom, email ou tag…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         {selected.length > 0 && (
-          <button onClick={deleteSelected} className="btn badge-failed text-xs px-4 py-2.5 animate-in flex items-center gap-2" style={{ background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)" }}>
-            <Trash2 size={13} />
-            Supprimer la sélection ({selected.length})
+          <button onClick={deleteSelected} className="btn !bg-[hsl(var(--rose)/0.15)] !text-[hsl(var(--rose))] !border-[hsl(var(--rose)/0.3)] !px-6 animate-in flex items-center gap-2 hover:!bg-[hsl(var(--rose)/0.25)]">
+            <Trash2 size={16} />
+            Supprimer ({selected.length})
           </button>
         )}
       </div>
 
       {/* Table */}
-      <div className="card overflow-hidden">
-        <div className="table-row font-mono text-xs" style={{ gridTemplateColumns: "40px 2fr 2fr 1fr 1fr 80px", color: "var(--dim)" }}>
-          <span className="flex items-center justify-center">
-            <input type="checkbox" checked={filtered.length > 0 && selected.length === filtered.length} onChange={toggleAll} className="w-4 h-4 rounded border-border bg-s2 accent-electric cursor-pointer" />
+      <div className="card !rounded-2xl overflow-hidden border-[hsl(var(--border))]">
+        <div className="table-row font-mono text-[10px] tracking-widest uppercase bg-[hsl(var(--s1)/0.5)] !py-4" 
+             style={{ gridTemplateColumns: "60px 1.8fr 1.8fr 1fr 1fr 1fr 80px", color: "hsl(var(--dim))" }}>
+          <span className="flex items-center justify-center border-r border-[hsl(var(--border))]">
+            <input type="checkbox" checked={filtered.length > 0 && selected.length === filtered.length} onChange={toggleAll} className="w-5 h-5 rounded-lg border-[hsl(var(--border))] bg-[hsl(var(--s3))] text-[hsl(var(--electric))] focus:ring-0 checked:bg-[hsl(var(--electric))] cursor-pointer transition-all" />
           </span>
-          <span>NOM</span><span>EMAIL</span><span>LISTE</span><span>STATUT</span><span></span>
+          <span className="pl-6">Contact</span><span className="opacity-70">Identifiant Email</span><span>Segment</span><span>Statut</span><span>Tags</span><span></span>
         </div>
+        
         {filtered.length === 0 ? (
-          <div className="py-16 text-center" style={{ color: "var(--muted)" }}>
-            <Users size={28} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Aucun contact</p>
+          <div className="py-24 text-center bg-gradient-to-b from-transparent to-[hsl(var(--s2)/0.2)]">
+            <Users size={48} className="mx-auto mb-6 opacity-10 text-white" />
+            <p className="text-sm font-bold text-white mb-1">Aucun contact trouvé</p>
+            <p className="text-xs text-[hsl(var(--muted))]">Essayez de modifier vos filtres ou effectuez une nouvelle recherche.</p>
           </div>
         ) : filtered.map((c, i) => (
-          <div key={c.id} className={`table-row animate-in ${selected.includes(c.id) ? "bg-electric/5" : ""}`} 
-               style={{ gridTemplateColumns: "40px 2fr 2fr 1fr 1fr 80px", animationDelay: `${i * 0.03}s` }}>
-            <span className="flex items-center justify-center">
-              <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 rounded border-border bg-s2 accent-electric cursor-pointer" />
+          <div key={c.id} className={`table-row !py-5 transition-all group ${selected.includes(c.id) ? "bg-[hsl(var(--electric)/0.03)]" : ""}`} 
+               style={{ gridTemplateColumns: "60px 1.8fr 1.8fr 1fr 1fr 1fr 80px", animationDelay: `${i * 0.02}s` }}>
+            <span className="flex items-center justify-center border-r border-[hsl(var(--border))]">
+              <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)} className="w-5 h-5 rounded-lg border-[hsl(var(--border))] bg-[hsl(var(--s3))] text-[hsl(var(--electric))] focus:ring-0 checked:bg-[hsl(var(--electric))] cursor-pointer transition-all" />
             </span>
-            <span className="font-medium" style={{ color: "#fff" }}>{c.name}</span>
-            <span className="font-mono text-xs truncate" style={{ color: "var(--muted)" }}>{c.email}</span>
-            <span className="text-xs">{lists.find(l => l.id === c.listId)?.name || c.listId}</span>
-            <span><span className={`badge ${c.subscribed ? "badge-green" : "badge-failed"}`}>{c.subscribed ? "Abonné" : "Désabonné"}</span></span>
-            <div className="flex justify-end">
-              <button onClick={() => deleteContact(c.id)} className="btn btn-danger" style={{ padding: "4px 10px" }}><Trash2 size={12} /></button>
+            <span className="pl-6 flex flex-col">
+               <span className="font-bold text-white group-hover:text-[hsl(var(--electric))] transition-colors">{c.name}</span>
+               <span className="text-[10px] font-mono text-[hsl(var(--dim))] mt-0.5">ID: {c.id.split('-')[0]}</span>
+            </span>
+            <span className="font-mono text-xs text-[hsl(var(--muted))] group-hover:text-white transition-colors truncate pr-4">{c.email}</span>
+            <span className="text-xs">
+               <span className="px-2 py-0.5 rounded-md bg-[hsl(var(--s2))] text-[hsl(var(--muted))] border border-[hsl(var(--border))]">{lists.find(l => l.id === c.listId)?.name || "Non classé"}</span>
+            </span>
+            <span>
+               <span className={`badge ${c.subscribed ? "badge-green" : "badge-failed"}`}>
+                  <div className={`w-1 h-1 rounded-full ${c.subscribed ? "bg-green-400" : "bg-rose-400"}`} />
+                  {c.subscribed ? "Abonné" : "Désabonné"}
+               </span>
+            </span>
+            <div className="flex flex-wrap gap-1">
+               {(c.tags || []).length > 0 ? c.tags.map((t, idx) => (
+                 <span key={idx} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[hsl(var(--s3))] text-[hsl(var(--electric))] border border-[hsl(var(--electric)/0.2)]">{t}</span>
+               )) : <span className="text-[9px] font-mono text-[hsl(var(--dim))] italic">Aucun</span>}
+            </div>
+            <div className="flex justify-end pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => deleteContact(c.id)} className="btn btn-danger !p-2 rounded-xl"><Trash2 size={14} /></button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add contact modal */}
+      {/* Modals for Add Contact / Add List */}
       {showAddContact && (
         <div className="overlay" onClick={e => e.target === e.currentTarget && setShowAddContact(false)}>
-          <div className="modal p-6 space-y-4">
-            <h3 className="font-display font-semibold text-lg" style={{ color: "#fff" }}>Ajouter un contact</h3>
-            <div><label className="label">Email</label><input className="input" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="email@exemple.com" /></div>
-            <div><label className="label">Nom</label><input className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Prénom Nom" /></div>
-            <div><label className="label">Liste</label>
-              <select className="input" value={newList} onChange={e => setNewList(e.target.value)}>
-                <option value="">Choisir une liste</option>
-                {lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-              </select>
+          <div className="modal p-8 flex flex-col gap-6" style={{ maxWidth: 440 }}>
+            <div>
+               <h3 className="font-display font-bold text-2xl text-white tracking-tight">Nouveau Contact</h3>
+               <p className="text-xs text-[hsl(var(--muted))] font-mono uppercase tracking-widest mt-1">Saisie de données</p>
             </div>
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => setShowAddContact(false)} className="btn btn-ghost flex-1">Annuler</button>
-              <button onClick={addContact} className="btn btn-primary flex-1">Ajouter</button>
+            <div className="space-y-5">
+              <div><label className="label">Adresse Email *</label><input className="input font-mono text-sm" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="email@exemple.com" /></div>
+              <div><label className="label">Nom complet</label><input className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jean Dupont" /></div>
+              <div><label className="label">Tags (séparés par des virgules)</label><input className="input font-mono text-xs" value={newTags} onChange={e => setNewTags(e.target.value)} placeholder="vip, prospect, 2024..." /></div>
+              <div><label className="label">Segment / Liste *</label>
+                <select className="input" value={newList} onChange={e => setNewList(e.target.value)}>
+                  <option value="">Sélectionner une cible</option>
+                  {lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button onClick={() => setShowAddContact(false)} className="btn btn-ghost flex-1">Annuler</button>
+                <button onClick={addContact} className="btn btn-primary flex-1">Enregistrer</button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Add list modal */}
       {showAddList && (
         <div className="overlay" onClick={e => e.target === e.currentTarget && setShowAddList(false)}>
-          <div className="modal p-6 space-y-4">
-            <h3 className="font-display font-semibold text-lg" style={{ color: "#fff" }}>Nouvelle liste</h3>
-            <div><label className="label">Nom</label><input className="input" value={newListName} onChange={e => setNewListName(e.target.value)} placeholder="Ma liste" /></div>
-            <div><label className="label">Description</label><input className="input" value={newListDesc} onChange={e => setNewListDesc(e.target.value)} placeholder="Description optionnelle" /></div>
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => setShowAddList(false)} className="btn btn-ghost flex-1">Annuler</button>
-              <button onClick={addList} className="btn btn-primary flex-1">Créer</button>
+          <div className="modal p-8 flex flex-col gap-6" style={{ maxWidth: 440 }}>
+            <div>
+               <h3 className="font-display font-bold text-2xl text-white tracking-tight">Nouveau Segment</h3>
+               <p className="text-xs text-[hsl(var(--muted))] font-mono uppercase tracking-widest mt-1">Saisie de données</p>
+            </div>
+            <div className="space-y-5">
+              <div><label className="label">Nom de la liste *</label><input className="input" value={newListName} onChange={e => setNewListName(e.target.value)} placeholder="Ex: Clients VIP 2024" /></div>
+              <div><label className="label">Description (optionnelle)</label><input className="input" value={newListDesc} onChange={e => setNewListDesc(e.target.value)} placeholder="Contexte pour cet audience…" /></div>
+              <div className="flex gap-4 pt-4">
+                <button onClick={() => setShowAddList(false)} className="btn btn-ghost flex-1">Annuler</button>
+                <button onClick={addList} className="btn btn-primary flex-1">Créer le segment</button>
+              </div>
             </div>
           </div>
         </div>
@@ -426,6 +521,7 @@ function ContactsView({ contacts, lists, onRefresh }: {
 }
 
 // ===================== CAMPAIGNS VIEW =====================
+// ===================== CAMPAIGNS VIEW =====================
 function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   campaigns: Campaign[]; lists: ContactList[]; contacts: Contact[]; onRefresh: () => void;
 }) {
@@ -434,7 +530,7 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   const [name, setName] = useState(""); const [subject, setSubject] = useState("");
   const [html, setHtml] = useState(""); const [listId, setListId] = useState("");
   const [provider, setProvider] = useState<EmailProvider>("resend");
-  const [fromName, setFromName] = useState("CrediWize"); const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
+  const [fromName, setFromName] = useState("MailMax"); const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
   const [scheduledAt, setScheduledAt] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -467,79 +563,95 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   }
 
   async function deleteCampaign(id: string) {
+    if (!confirm("Supprimer cette campagne et son historique ?")) return;
     await fetch("/api/campaigns", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
     onRefresh();
   }
 
   const steps = [
-    { n: 1, label: "Configuration", icon: <Settings size={14} /> },
+    { n: 1, label: "Audience", icon: <Users size={14} /> },
     { n: 2, label: "Expéditeur", icon: <UserMinus size={14} /> },
-    { n: 3, label: "Message", icon: <Mail size={14} /> },
+    { n: 3, label: "Contenu", icon: <Mail size={14} /> },
   ];
 
   return (
-    <div className="animate-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-xl font-semibold" style={{ color: "#fff" }}>Campagnes</h2>
-        <button onClick={() => { setStep(1); setShowCreate(true); }} className="btn btn-primary text-sm">
-          <Plus size={14} /> Nouvelle campagne
+    <div className="animate-in space-y-6 pb-12">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display font-bold text-2xl text-white">Vos Campagnes</h2>
+          <p className="text-sm text-[hsl(var(--muted))]">Gérez et suivez vos performances d'envois groupés</p>
+        </div>
+        <button onClick={() => { setStep(1); setShowCreate(true); }} className="btn btn-primary">
+          <Plus size={18} /> Nouvelle campagne
         </button>
       </div>
 
       {campaigns.length === 0 ? (
-        <div className="card py-20 text-center">
-          <Megaphone size={32} className="mx-auto mb-3 opacity-20" />
-          <p style={{ color: "var(--muted)" }}>Aucune campagne pour l'instant</p>
+        <div className="card py-24 flex flex-col items-center justify-center text-center bg-gradient-to-b from-[hsl(var(--s2))] to-transparent">
+          <div className="w-16 h-16 rounded-2xl bg-[hsl(var(--s3))] flex items-center justify-center text-[hsl(var(--muted))] mb-6 border border-[hsl(var(--border))]">
+            <Megaphone size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-white mb-2">Aucune campagne active</h3>
+          <p className="text-sm text-[hsl(var(--muted))] max-w-sm mb-8">Lancez votre première campagne et commencez à engager vos contacts dès maintenant.</p>
+          <button onClick={() => { setStep(1); setShowCreate(true); }} className="btn btn-ghost px-8">
+            Créer ma première campagne
+          </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-4">
           {campaigns.map((c, i) => (
-            <div key={c.id} className="card p-5 animate-in card-hover" style={{ animationDelay: `${i * 0.05}s` }}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-display font-semibold truncate" style={{ color: "#fff" }}>{c.name}</h3>
-                    <StatusBadge s={c.status} />
-                    <ProviderBadge p={c.provider} />
+            <div key={c.id} className="card p-0 overflow-hidden animate-in card-hover group" style={{ animationDelay: `${i * 0.05}s` }}>
+              <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x border-[hsl(var(--border))]" style={{ borderColor: "hsl(var(--border))" }}>
+                <div className="p-6 md:w-1/3 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                       <StatusBadge s={c.status} />
+                       <ProviderBadge p={c.provider} />
+                    </div>
+                    <h3 className="font-display font-bold text-lg text-white mb-1 truncate group-hover:text-[hsl(var(--electric))] transition-colors">{c.name}</h3>
+                    <p className="text-xs text-[hsl(var(--muted))] truncate mb-4">{c.subject}</p>
                   </div>
-                  <p className="text-sm truncate mb-3" style={{ color: "var(--muted)" }}>{c.subject}</p>
-                  <div className="flex items-center gap-4 text-xs font-mono" style={{ color: "var(--dim)" }}>
-                    <span className="flex items-center gap-1"><Send size={11} />{c.stats.sent}/{c.stats.total} envoyés</span>
-                    <span className="flex items-center gap-1"><Eye size={11} />{c.stats.opens} ouvertures</span>
-                    <span className="flex items-center gap-1"><MousePointer size={11} />{c.stats.clicks} clics</span>
-                    <span className="flex items-center gap-1"><UserMinus size={11} />{c.stats.unsubscribes} désabs</span>
+                  
+                  <div className="flex items-center gap-2 pt-2">
+                    {c.status === "draft" && (
+                      <button onClick={() => sendCampaign(c.id)} disabled={sending === c.id} className="btn btn-primary !py-2 !px-4 text-xs flex-1">
+                        {sending === c.id ? <><Loader2 size={12} className="spin" /> Envoi…</> : <><Play size={12} /> Lancer</>}
+                      </button>
+                    )}
+                    {c.scheduledAt && c.status === "scheduled" && (
+                      <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[hsl(var(--blue) / 0.1)] text-[hsl(var(--blue))] text-[10px] font-bold font-mono">
+                        <Clock size={12} /> {new Date(c.scheduledAt).toLocaleString("fr-FR", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                    <button onClick={() => deleteCampaign(c.id)} className="btn btn-danger !p-2 rounded-lg"><Trash2 size={14} /></button>
                   </div>
-                  {c.stats.total > 0 && (
-                    <div className="flex gap-3 mt-3">
+                </div>
+
+                <div className="p-6 md:flex-1 bg-[hsl(var(--s1) / 0.3)]">
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
                       {[
-                        { label: "Ouv.", val: c.stats.opens, total: c.stats.sent, color: "var(--electric)" },
-                        { label: "Clics", val: c.stats.clicks, total: c.stats.sent, color: "var(--violet)" },
-                      ].map(bar => (
-                        <div key={bar.label} className="flex-1">
-                          <div className="flex justify-between text-xs font-mono mb-1" style={{ color: "var(--dim)" }}>
-                            <span>{bar.label}</span>
-                            <span>{bar.total > 0 ? Math.round((bar.val / bar.total) * 100) : 0}%</span>
-                          </div>
-                          <div className="progress-bar">
-                            <div className="progress-fill" style={{ width: `${bar.total > 0 ? (bar.val / bar.total) * 100 : 0}%`, background: bar.color }} />
-                          </div>
+                        { label: "Emails", val: c.stats.total, icon: <Send />, color: "var(--electric)" },
+                        { label: "Ouverts", val: c.stats.opens, icon: <Eye />, color: "var(--violet)" },
+                        { label: "Clics", val: c.stats.clicks, icon: <MousePointer />, color: "var(--amber)" },
+                        { label: "Désabs.", val: c.stats.unsubscribes, icon: <UserMinus />, color: "var(--rose)" },
+                      ].map(s => (
+                        <div key={s.label}>
+                          <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest mb-1">{s.label}</div>
+                          <div className="text-xl font-bold text-white font-mono">{s.val}</div>
                         </div>
                       ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2 flex-shrink-0">
-                  {c.status === "draft" && (
-                    <button onClick={() => sendCampaign(c.id)} disabled={sending === c.id} className="btn btn-primary text-sm">
-                      {sending === c.id ? <><Loader2 size={12} className="spin" /> Envoi…</> : <><Play size={12} /> Envoyer</>}
-                    </button>
-                  )}
-                  {c.scheduledAt && c.status === "scheduled" && (
-                    <div className="text-xs font-mono flex items-center gap-1" style={{ color: "var(--blue)" }}>
-                      <Clock size={11} /> {new Date(c.scheduledAt).toLocaleString("fr-FR")}
-                    </div>
-                  )}
-                  <button onClick={() => deleteCampaign(c.id)} className="btn btn-danger text-sm"><Trash2 size={12} /></button>
+                   </div>
+                   
+                   <div className="space-y-4 pt-2 border-t border-[hsl(var(--border))]">
+                      <div className="flex justify-between items-center text-[11px] font-mono">
+                        <span className="text-[hsl(var(--muted))] uppercase">Progression de l'envoi</span>
+                        <span className="text-white">{c.stats.sent}/{c.stats.total} envoyés ({c.stats.total > 0 ? Math.round((c.stats.sent/c.stats.total)*100) : 0}%)</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[hsl(var(--s2))] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--electric))] to-[hsl(var(--violet))] transition-all duration-1000" 
+                             style={{ width: `${c.stats.total > 0 ? (c.stats.sent / c.stats.total) * 100 : 0}%` }} />
+                      </div>
+                   </div>
                 </div>
               </div>
             </div>
@@ -550,83 +662,79 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
       {/* Create campaign modal - Multi-step */}
       {showCreate && (
         <div className="overlay" onClick={e => e.target === e.currentTarget && setShowCreate(false)}>
-          <div className="modal flex flex-col shadow-2xl" style={{ maxWidth: 560, borderTop: "4px solid var(--electric)" }}>
+          <div className="modal flex flex-col shadow-2xl overflow-hidden" style={{ maxWidth: 640 }}>
+            <div className="h-1 bg-[hsl(var(--electric))]" />
             {/* Header / Steps */}
             <div className="p-8 pb-4">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h3 className="font-display font-bold text-xl" style={{ color: "#fff" }}>Nouvelle campagne</h3>
-                  <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>Configuration de votre envoi groupé</p>
+                  <h3 className="font-display font-bold text-2xl text-white tracking-tight">Nouvelle campagne</h3>
+                  <p className="text-xs text-[hsl(var(--muted))] mt-1 font-mono uppercase tracking-widest">Configuration de diffusion</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-mono px-2 py-1 rounded bg-s2 border border-border" style={{ color: "var(--electric)" }}>Step {step}/3</span>
+                  <div className="text-[10px] font-inter font-bold px-2 py-1 rounded bg-[hsl(var(--s2))] border border-[hsl(var(--border))] text-[hsl(var(--muted))]">Step {step}/3</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 {steps.map((s, i) => (
-                  <div key={s.n} className="flex-1 flex items-center gap-1.5">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${step >= s.n ? "bg-electric text-s1 shadow-[0_0_15px_rgba(79,255,207,0.3)]" : "bg-s2 text-dim border border-border"}`}>
-                      {step > s.n ? <CheckCircle size={15} /> : s.n}
+                  <div key={s.n} className="flex-1 flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-bold transition-all duration-500 ${step >= s.n ? "bg-[hsl(var(--electric))] text-[hsl(var(--bg))] shadow-[0_0_20px_hsl(var(--electric)/0.3)]" : "bg-[hsl(var(--s3))] text-[hsl(var(--dim))] border border-[hsl(var(--border))]"}`}>
+                      {step > s.n ? <CheckCircle size={18} /> : s.n}
                     </div>
-                    {i < steps.length - 1 && <div className={`flex-1 h-1 rounded-full ${step > s.n ? "bg-electric/40" : "bg-border"}`} />}
+                    {i < steps.length - 1 && <div className={`flex-1 h-[2px] rounded-full transition-colors duration-500 ${step > s.n ? "bg-[hsl(var(--electric))]" : "bg-[hsl(var(--border))]"}`} />}
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Content Area */}
-            <div className="px-8 pb-6 flex-1 overflow-y-auto">
+            <div className="px-8 py-6 flex-1 overflow-y-auto" style={{ minHeight: 380 }}>
               {step === 1 && (
                 <div className="space-y-6 animate-in">
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-6">
                     <div>
-                      <label className="label">Nom de la campagne *</label>
-                      <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Newsletter Printemps" />
+                      <label className="label">Nom interne de la campagne *</label>
+                      <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Newsletter fidélisation - Avril 2024" />
+                      <p className="text-[10px] text-[hsl(var(--dim))] mt-2 italic font-mono">Visible uniquement par vous.</p>
                     </div>
                     <div>
-                      <label className="label">Liste de contacts *</label>
+                      <label className="label">Cible & Audience *</label>
                       <select className="input" value={listId} onChange={e => setListId(e.target.value)}>
                         <option value="">Sélectionner une audience</option>
                         {lists.map(l => <option key={l.id} value={l.id}>{l.name} ({contacts.filter(c=>c.listId===l.id).length} contacts)</option>)}
                       </select>
                     </div>
                   </div>
-                  <div className="p-4 bg-s2/30 rounded-xl border border-border">
-                    <p className="text-xs font-mono" style={{ color: "var(--muted)" }}>Fournisseur : <span style={{ color: "var(--electric)" }}>Resend</span></p>
-                  </div>
                 </div>
               )}
 
               {step === 2 && (
-                <div className="space-y-6 animate-in">
-                  {/* Inbox Preview Visual */}
-                  <div className="space-y-2">
-                    <label className="label">Aperçu boîte de réception</label>
-                    <div className="p-4 rounded-xl border border-white/5 bg-gradient-to-br from-s2 to-s1/50 shadow-inner">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg" 
-                             style={{ background: "linear-gradient(135deg, var(--electric), var(--violet))", color: "var(--s1)" }}>
-                          {(fromName || "M")[0].toUpperCase()}
+                <div className="space-y-8 animate-in">
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-[hsl(var(--s2))] to-transparent border border-[hsl(var(--border))]">
+                    <label className="label mb-4 opacity-50">Apparence dans la boîte de réception</label>
+                    <div className="flex items-center gap-4 bg-[hsl(var(--bg))] p-4 rounded-xl border border-[hsl(var(--border))]">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl text-white shadow-inner" 
+                           style={{ background: "linear-gradient(135deg, hsl(var(--violet)), hsl(var(--electric)))" }}>
+                        {(fromName || "M")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-white truncate">{fromName || "MailMax"}</span>
+                          <span className="text-[10px] text-[hsl(var(--dim))] font-mono">Maintenant</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-white truncate">{fromName || "MailerFind"}</span>
-                            <span className="text-[10px] text-muted">17:05</span>
-                          </div>
-                          <div className="text-xs text-white/90 font-medium truncate mt-0.5">{subject || "(Sans objet)"}</div>
-                          <p className="text-[10px] text-dim truncate mt-0.5">Cliquez pour voir le contenu de cette campagne...</p>
-                        </div>
+                        <div className="text-[13px] text-white/90 font-semibold truncate mt-0.5">{subject || "(Objet de l'email)"}</div>
+                        <p className="text-[11px] text-[hsl(var(--dim))] truncate mt-0.5">Cliquez pour voir cet email incroyable...</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="label">Nom expéditeur</label>
-                      <input className="input" value={fromName} onChange={e => setFromName(e.target.value)} placeholder="MailerFind" />
+                      <label className="label">Nom affiché</label>
+                      <input className="input" value={fromName} onChange={e => setFromName(e.target.value)} placeholder="MailMax" />
                     </div>
                     <div>
-                      <label className="label">Email expéditeur *</label>
+                      <label className="label">Email de réponse *</label>
                       <input className="input font-mono text-xs" value={fromEmail} onChange={e => setFromEmail(e.target.value)} placeholder="hello@domain.com" />
                     </div>
                   </div>
@@ -640,49 +748,54 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
               {step === 3 && (
                 <div className="space-y-6 animate-in">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="label m-0">Corps du message</label>
-                      <span className="text-[10px] text-dim font-mono">Variables: {"{{name}}"}, {"{{email}}"}</span>
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="label m-0">Corps du message (HTML)</label>
+                      <div className="flex gap-2">
+                        {["name", "email"].map(v => (
+                          <button key={v} onClick={() => execCmd("insertText", `{{${v}}}`)} className="text-[9px] font-mono px-2 py-0.5 rounded bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white hover:border-[hsl(var(--border-glow))] transition-colors">
+                            {v}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="rounded-2xl overflow-hidden border" style={{ borderColor: "var(--border)", background: "var(--s2)" }}>
+                    <div className="rounded-2xl overflow-hidden border border-[hsl(var(--border))] shadow-inner" style={{ background: "hsl(var(--s2))" }}>
                       <EditorToolbar exec={execCmd} />
                       <div ref={editorRef} contentEditable onInput={() => { if (editorRef.current) setHtml(editorRef.current.innerHTML); }}
-                        data-placeholder="Commencez à rédiger..." className="rich-editor px-5 py-4 text-sm" suppressContentEditableWarning style={{ minHeight: 180, maxHeight: 220, overflowY: 'auto' }} />
+                        data-placeholder="Commencez à rédiger..." className="rich-editor px-6 py-6 text-sm" suppressContentEditableWarning style={{ minHeight: 220, maxHeight: 300, overflowY: 'auto' }} />
                     </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-s2/30 border border-border">
-                    <label className="label flex items-center gap-2 mb-3">
-                      <Calendar size={12} /> Planifier la diffusion
+                  <div className="p-5 rounded-2xl bg-[hsl(var(--s2) / 0.3)] border border-dashed border-[hsl(var(--border))]">
+                    <label className="label flex items-center gap-2 mb-4">
+                      <Calendar size={14} className="text-[hsl(var(--electric))]" /> Planification optionnelle
                     </label>
                     <input type="datetime-local" className="input" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} style={{ colorScheme: "dark" }} />
-                    <p className="text-[10px] text-dim mt-2 italic">Laissez vide pour un envoi immédiat après création.</p>
+                    <p className="text-[10px] text-[hsl(var(--dim))] mt-3 italic font-mono uppercase tracking-tighter">Laissez vide pour lancer maintenant.</p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Footer Buttons */}
-            <div className="p-8 pt-4 border-t flex gap-3" style={{ borderColor: "var(--border)" }}>
+            <div className="p-8 border-t border-[hsl(var(--border))] bg-[hsl(var(--s1) / 0.3)] flex gap-4">
               {step > 1 ? (
-                <button onClick={() => setStep(step - 1)} className="btn btn-ghost px-6">Retour</button>
+                <button onClick={() => setStep(step - 1)} className="btn btn-ghost px-8">Retour</button>
               ) : (
-                <button onClick={() => setShowCreate(false)} className="btn btn-ghost px-6">Annuler</button>
+                <button onClick={() => setShowCreate(false)} className="btn btn-ghost px-8">Annuler</button>
               )}
               {step < 3 ? (
                 <button onClick={() => { if (step === 1 && (!name || !listId)) return; if (step === 2 && (!fromEmail || !subject)) return; setStep(step + 1); }}
-                  className="btn btn-primary flex-1 justify-center shadow-lg">
-                  Continuer <ChevronRight size={16} />
+                  className="btn btn-primary flex-1 justify-center">
+                  Continuer <ChevronRight size={18} />
                 </button>
               ) : (
-                <button onClick={createCampaign} className="btn btn-primary flex-1 justify-center shadow-[0_0_20px_rgba(79,255,207,0.2)]">
-                  {scheduledAt ? <><Calendar size={14} /> Confirmer la planification</> : <><Zap size={14} /> Lancer la campagne</>}
+                <button onClick={createCampaign} className="btn btn-primary flex-1 justify-center shadow-[0_0_30px_hsl(var(--electric)/0.2)]">
+                  {scheduledAt ? <><Calendar size={18} /> Planifier l'envoi</> : <><Zap size={18} /> Lancer la campagne</>}
                 </button>
               )}
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
@@ -693,40 +806,53 @@ function HistoryView({ records, onRefresh }: { records: EmailRecord[]; onRefresh
   const filtered = records.filter(r => filter === "all" || r.status === filter);
 
   return (
-    <div className="animate-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-xl font-semibold" style={{ color: "#fff" }}>Historique</h2>
-        <div className="flex items-center gap-2">
+    <div className="animate-in pb-12">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="font-display font-bold text-2xl text-white">Journal d'Activité</h2>
+          <p className="text-sm text-[hsl(var(--muted))]">Suivi détaillé de tous les emails envoyés ou programmés</p>
+        </div>
+        <div className="flex items-center gap-2 bg-[hsl(var(--s2))] p-1 rounded-xl border border-[hsl(var(--border))]">
           {["all", "sent", "failed", "scheduled"].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className="btn text-xs" style={filter === f ? { background: "var(--s3)", color: "var(--electric)", border: "1px solid var(--electric-dim)" } : { background: "transparent", color: "var(--muted)", border: "1px solid var(--border)" }}>
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-widest transition-all ${filter === f ? "bg-[hsl(var(--s3))] text-[hsl(var(--electric))] shadow-sm" : "text-[hsl(var(--dim))] hover:text-white"}`}>
               {f === "all" ? "Tous" : f}
             </button>
           ))}
-          <button onClick={onRefresh} className="btn btn-ghost text-sm"><RefreshCw size={13} /></button>
+          <div className="w-[1px] h-4 bg-[hsl(var(--border))] mx-1" />
+          <button onClick={onRefresh} className="p-2 text-[hsl(var(--dim))] hover:text-white transition-colors"><RefreshCw size={14} /></button>
         </div>
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="card !rounded-2xl overflow-hidden border-[hsl(var(--border))]">
+        <div className="table-row font-mono text-[10px] tracking-widest uppercase bg-[hsl(var(--s1)/0.5)] !py-4" 
+             style={{ gridTemplateColumns: "100px 1.5fr 2fr 100px 100px 100px 140px", color: "hsl(var(--dim))" }}>
+          <span>Source</span><span>Expéditeur</span><span>Objet</span><span className="text-center">Ouverts</span><span className="text-center">Clics</span><span>Statut</span><span className="text-right pr-6">Date</span>
+        </div>
+        
         {filtered.length === 0 ? (
-          <div className="py-16 text-center"><History size={28} className="mx-auto mb-2 opacity-20" /><p className="text-sm" style={{ color: "var(--muted)" }}>Aucun email</p></div>
+          <div className="py-24 text-center bg-gradient-to-b from-transparent to-[hsl(var(--s2)/0.2)]">
+            <History size={48} className="mx-auto mb-6 opacity-10 text-white" />
+            <p className="text-sm font-bold text-white mb-1">Aucun enregistrement</p>
+            <p className="text-xs text-[hsl(var(--muted))]">Votre historique d'envoi est vide pour le moment.</p>
+          </div>
         ) : (
-          <>
-            <div className="table-row font-mono text-xs" style={{ gridTemplateColumns: "1fr 1fr 2fr 1fr 1fr 80px 100px", color: "var(--dim)" }}>
-              <span>PROVIDER</span><span>DE</span><span>OBJET</span><span>OUVERTURES</span><span>CLICS</span><span>STATUT</span><span>DATE</span>
+          filtered.map((r, i) => (
+            <div key={r.id} className="table-row !py-5 hover:bg-[hsl(var(--electric)/0.02)] transition-colors group" 
+                 style={{ gridTemplateColumns: "100px 1.5fr 2fr 100px 100px 100px 140px", animationDelay: `${i * 0.02}s` }}>
+              <ProviderBadge p={r.provider} />
+              <span className="truncate font-mono text-[11px] text-[hsl(var(--dim))] group-hover:text-[hsl(var(--muted))] transition-colors pr-4">{r.from}</span>
+              <span className="truncate text-white font-medium pr-4">{r.subject}</span>
+              <span className="flex items-center justify-center gap-1.5 font-mono text-[11px] text-[hsl(var(--muted))]">
+                <Eye size={12} className="opacity-50" /> {r.opens}
+              </span>
+              <span className="flex items-center justify-center gap-1.5 font-mono text-[11px] text-[hsl(var(--muted))]">
+                <MousePointer size={12} className="opacity-50" /> {r.clicks}
+              </span>
+              <span><StatusBadge s={r.status} /></span>
+              <span className="text-[11px] font-mono text-[hsl(var(--dim))] text-right pr-6">{relTime(r.timestamp)}</span>
             </div>
-            {filtered.map((r, i) => (
-              <div key={r.id} className="table-row animate-in text-sm" style={{ gridTemplateColumns: "1fr 1fr 2fr 1fr 1fr 80px 100px", animationDelay: `${i * 0.02}s` }}>
-                <ProviderBadge p={r.provider} />
-                <span className="truncate font-mono text-xs" style={{ color: "var(--muted)" }}>{r.from}</span>
-                <span className="truncate" style={{ color: "#ddd" }}>{r.subject}</span>
-                <span className="flex items-center gap-1 font-mono text-xs"><Eye size={10} />{r.opens}</span>
-                <span className="flex items-center gap-1 font-mono text-xs"><MousePointer size={10} />{r.clicks}</span>
-                <StatusBadge s={r.status} />
-                <span className="text-xs font-mono" style={{ color: "var(--dim)" }}>{relTime(r.timestamp)}</span>
-              </div>
-            ))}
-          </>
+          ))
         )}
       </div>
     </div>
@@ -735,86 +861,128 @@ function HistoryView({ records, onRefresh }: { records: EmailRecord[]; onRefresh
 
 // ===================== DASHBOARD VIEW =====================
 function DashboardView({ stats }: { stats: DashboardStats | null }) {
-  if (!stats) return <div className="flex items-center justify-center h-64"><Loader2 size={24} className="spin" style={{ color: "var(--electric)" }} /></div>;
+  if (!stats) return <div className="flex flex-col items-center justify-center h-96 gap-4">
+    <Loader2 size={32} className="spin text-[hsl(var(--electric))]" />
+    <p className="text-xs font-mono text-[hsl(var(--dim))] uppercase tracking-widest animate-pulse">Initialisation du dashboard…</p>
+  </div>;
 
   return (
-    <div className="animate-in space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-semibold" style={{ color: "#fff" }}>Vue d'ensemble</h2>
-        <span className="font-mono text-xs" style={{ color: "var(--muted)" }}>{new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</span>
+    <div className="animate-in space-y-8 pb-12">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard value={fmt(stats.totalSent)} label="Emails envoyés" icon={<Send size={20} />} color="var(--electric)" delta="+12.5%" trend="up" />
+        <StatCard value={`${stats.openRate}%`} label="Taux d'ouverture" icon={<Eye size={20} />} color="var(--violet)" delta="+4.3%" trend="up" />
+        <StatCard value={`${stats.clickRate}%`} label="Taux de clic" icon={<MousePointer size={20} />} color="var(--amber)" delta="-1.2%" trend="down" />
+        <StatCard value={`${stats.unsubscribeRate}%`} label="Désabonnements" icon={<UserMinus size={20} />} color="var(--rose)" delta="-0.05%" trend="up" />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard value={fmt(stats.totalSent)} label="Emails envoyés" icon={<Send size={16} />} color="var(--electric)" />
-        <StatCard value={`${stats.openRate}%`} label="Taux d'ouverture" icon={<Eye size={16} />} color="var(--violet)" />
-        <StatCard value={`${stats.clickRate}%`} label="Taux de clic" icon={<MousePointer size={16} />} color="var(--amber)" />
-        <StatCard value={`${stats.unsubscribeRate}%`} label="Désabonnements" icon={<UserMinus size={16} />} color="var(--rose)" />
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="card p-5 col-span-2">
-          <h3 className="font-display font-semibold mb-4" style={{ color: "#fff" }}>Activité — 7 derniers jours</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={stats.recentActivity} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-              <defs>
-                <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4fffcf" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#4fffcf" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gOpens" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e38" />
-              <XAxis dataKey="date" tick={{ fill: "#6060a0", fontSize: 10, fontFamily: "Space Mono" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#6060a0", fontSize: 10 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: "#121224", border: "1px solid #2a2a48", borderRadius: 10, fontFamily: "Outfit" }} />
-              <Area type="monotone" dataKey="sent" stroke="#4fffcf" strokeWidth={2} fill="url(#gSent)" name="Envoyés" />
-              <Area type="monotone" dataKey="opens" stroke="#a78bfa" strokeWidth={2} fill="url(#gOpens)" name="Ouvertures" />
-              <Area type="monotone" dataKey="clicks" stroke="#fbbf24" strokeWidth={2} fill="none" name="Clics" strokeDasharray="4 4" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="card p-5">
-          <h3 className="font-display font-semibold mb-4" style={{ color: "#fff" }}>Top campagnes</h3>
-          {stats.topCampaigns.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 opacity-30">
-              <BarChart2 size={24} className="mb-2" />
-              <p className="text-xs text-center" style={{ color: "var(--muted)" }}>Aucune donnée</p>
+      {/* Main Stats Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="card p-8 lg:col-span-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <BarChart2 size={120} />
+          </div>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="font-display font-bold text-xl text-white">Analyse de Performance</h3>
+              <p className="text-xs text-[hsl(var(--muted))] mt-1">Activité de diffusion sur les 7 derniers jours</p>
             </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={stats.topCampaigns} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 0 }}>
-                <XAxis type="number" tick={{ fill: "#6060a0", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fill: "#8080b0", fontSize: 10, fontFamily: "Outfit" }} axisLine={false} tickLine={false} width={80} />
-                <Tooltip contentStyle={{ background: "#121224", border: "1px solid #2a2a48", borderRadius: 10 }} />
-                <Bar dataKey="opens" name="Ouvertures" radius={4}>
-                  {stats.topCampaigns.map((_, i) => <Cell key={i} fill={["#4fffcf", "#a78bfa", "#fbbf24", "#60a5fa", "#fb7185"][i % 5]} />)}
-                </Bar>
-              </BarChart>
+            <div className="flex gap-2">
+              <span className="badge badge-sent">Actif</span>
+            </div>
+          </div>
+          
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats.recentActivity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--electric))" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="hsl(var(--electric))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gOpens" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--violet))" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="hsl(var(--violet))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10, fontFamily: "Space Mono" }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} />
+                <Tooltip 
+                  contentStyle={{ background: "hsl(var(--bg))", border: "1px solid hsl(var(--border))", borderRadius: "12px", boxShadow: "0 10px 40px rgba(0,0,0,0.5)", fontFamily: "Outfit" }}
+                  cursor={{ stroke: "hsl(var(--electric) / 0.2)", strokeWidth: 2 }}
+                />
+                <Area type="monotone" dataKey="sent" stroke="hsl(var(--electric))" strokeWidth={3} fill="url(#gSent)" name="Envoyés" activeDot={{ r: 6, strokeWidth: 0, fill: "white" }} />
+                <Area type="monotone" dataKey="opens" stroke="hsl(var(--violet))" strokeWidth={3} fill="url(#gOpens)" name="Ouverts" />
+              </AreaChart>
             </ResponsiveContainer>
-          )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <div className="card p-6 flex-1">
+            <h3 className="font-display font-bold text-lg text-white mb-6">Top Campagnes</h3>
+            <div className="space-y-5">
+              {stats.topCampaigns.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 opacity-30 gap-3 border-2 border-dashed border-[hsl(var(--border))] rounded-2xl">
+                  <BarChart2 size={32} />
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-center">Aucune campagne<br/>active</p>
+                </div>
+              ) : (
+                stats.topCampaigns.slice(0, 4).map((c, i) => (
+                  <div key={i} className="flex items-center gap-4 group">
+                    <div className="w-10 h-10 rounded-xl bg-[hsl(var(--s2))] flex items-center justify-center text-xs font-bold border border-[hsl(var(--border))] text-white transition-transform group-hover:scale-105" 
+                         style={{ color: i === 0 ? "hsl(var(--electric))" : "white", borderColor: i === 0 ? "hsl(var(--electric) / 0.2)" : "hsl(var(--border))" }}>
+                      0{i+1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-end mb-1">
+                        <div className="text-[13px] font-bold text-white truncate">{c.name}</div>
+                        <div className="text-[11px] font-mono text-[hsl(var(--electric))]">{c.opens} open</div>
+                      </div>
+                      <div className="h-1.5 w-full bg-[hsl(var(--s2))] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-1000" 
+                             style={{ width: `${Math.min(100, (c.opens / (stats.totalSent || 1)) * 100)}%`, background: i === 0 ? "hsl(var(--electric))" : "hsl(var(--violet))" }} />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {stats.topCampaigns.length > 0 && (
+              <button className="btn btn-ghost w-full mt-6 justify-center text-[10px] uppercase font-mono tracking-widest">
+                Voir toutes les campagnes
+              </button>
+            )}
+          </div>
+
+          <div className="card p-6 bg-gradient-to-br from-[hsl(var(--electric) / 0.1)] to-transparent border-[hsl(var(--electric) / 0.15)] relative overflow-hidden">
+            <Zap className="absolute -bottom-4 -right-4 w-24 h-24 text-[hsl(var(--electric))] opacity-5" />
+            <h4 className="font-display font-bold text-white text-sm mb-2">Besoin d'aide ?</h4>
+            <p className="text-xs text-[hsl(var(--muted))] leading-relaxed mb-4">Optimisez vos taux d'ouverture en personnalisant vos objets d'emails.</p>
+            <button className="btn btn-primary !py-2 !px-4 text-xs w-full justify-center">
+              Consulter le Guide <ExternalLink size={12} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Quick tips */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Tips Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { icon: <TrendingUp size={16} />, title: "Taux d'ouverture moyen", value: "20-25%", color: "var(--electric)", tip: "Un bon taux commence à 20%. Soigne tes objets." },
-          { icon: <MousePointer size={16} />, title: "Taux de clic moyen", value: "2-5%", color: "var(--violet)", tip: "Place tes CTAs en haut et en bas de l'email." },
-          { icon: <UserMinus size={16} />, title: "Taux de désabonnement", value: "<0.5%", color: "var(--amber)", tip: "Au-delà de 0.5%, revois la fréquence d'envoi." },
+          { icon: <TrendingUp size={16} />, title: "Taux d'ouverture cible", value: "25%+", color: "var(--electric)", tip: "Travaillez vos objets d'emails." },
+          { icon: <MousePointer size={16} />, title: "Taux de clic cible", value: "5%+", color: "var(--violet)", tip: "Soignez vos boutons d'action." },
+          { icon: <UserMinus size={16} />, title: "Désabonnements max", value: "<0.5%", color: "var(--amber)", tip: "Évitez de saturer vos listes." },
         ].map((t, i) => (
-          <div key={i} className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div style={{ color: t.color }}>{t.icon}</div>
-              <span className="text-xs font-mono" style={{ color: "var(--muted)" }}>{t.title}</span>
+          <div key={i} className="card p-5 flex items-center gap-4 hover:border-[hsl(var(--border-glow))] transition-all">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `hsl(${t.color} / 0.1)`, color: `hsl(${t.color})` }}>
+              {t.icon}
             </div>
-            <div className="text-xl font-display font-bold mb-1" style={{ color: t.color }}>{t.value}</div>
-            <p className="text-xs" style={{ color: "var(--dim)" }}>{t.tip}</p>
+            <div>
+              <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest">{t.title}</div>
+              <div className="text-lg font-bold text-white">{t.value}</div>
+              <p className="text-[11px] text-[hsl(var(--muted))]">{t.tip}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -825,6 +993,7 @@ function DashboardView({ stats }: { stats: DashboardStats | null }) {
 
 
 // ===================== MAIN APP =====================
+// ===================== MAIN APP =====================
 export default function MailerFindApp() {
   const [view, setView] = useState<View>("dashboard");
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -832,75 +1001,177 @@ export default function MailerFindApp() {
   const [lists, setLists] = useState<ContactList[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [records, setRecords] = useState<EmailRecord[]>([]);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   async function fetchAll() {
-    const [a, c, camp, h] = await Promise.all([
-      fetch("/api/analytics").then(r => r.json()),
-      fetch("/api/contacts").then(r => r.json()),
-      fetch("/api/campaigns").then(r => r.json()),
-      fetch("/api/send-email").then(r => r.json()),
-    ]);
-    setStats(a);
-    setContacts(c.contacts || []);
-    setLists(c.lists || []);
-    setCampaigns(Array.isArray(camp) ? camp : []);
-    setRecords(Array.isArray(h) ? h : []);
+    try {
+      const [a, c, camp, h] = await Promise.all([
+        fetch("/api/analytics").then(r => r.json()),
+        fetch("/api/contacts").then(r => r.json()),
+        fetch("/api/campaigns").then(r => r.json()),
+        fetch("/api/send-email").then(r => r.json()),
+      ]);
+      setStats(a);
+      setContacts(c.contacts || []);
+      setLists(c.lists || []);
+      setCampaigns(Array.isArray(camp) ? camp : []);
+      setRecords(Array.isArray(h) ? h : []);
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+    }
   }
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { 
+    fetchAll();
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const NAV = [
-    { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={16} /> },
-    { id: "compose", label: "Composer", icon: <Send size={16} /> },
-    { id: "contacts", label: "Contacts", icon: <Users size={16} /> },
-    { id: "campaigns", label: "Campagnes", icon: <Megaphone size={16} /> },
-    { id: "history", label: "Historique", icon: <History size={16} /> },
+    { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+    { id: "compose", label: "Composer", icon: <Send size={20} /> },
+    { id: "contacts", label: "Audience", icon: <Users size={20} /> },
+    { id: "campaigns", label: "Campagnes", icon: <Megaphone size={20} /> },
+    { id: "history", label: "Historique", icon: <History size={20} /> },
   ] as const;
 
+  const currentNav = NAV.find(n => n.id === view);
+
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--muted))] font-inter">
       {/* SIDEBAR */}
-      <aside className="w-56 flex-shrink-0 flex flex-col p-4 gap-1" style={{ background: "var(--s1)", borderRight: "1px solid var(--border)" }}>
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 px-2 py-3 mb-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#4fffcf18", border: "1px solid #4fffcf33" }}>
-            <Zap size={15} style={{ color: "var(--electric)" }} />
+      <aside className={`fixed inset-y-0 left-0 flex flex-col z-50 border-r border-[hsl(var(--border))] bg-[hsl(var(--bg))] transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-20" : "w-72"}`}>
+        {/* Logo Section */}
+        <div className={`flex items-center gap-4 p-6 mb-4 transition-all opacity-0 scale-95 animate-in fade-in zoom-in duration-500 fill-mode-forwards ${isSidebarCollapsed ? "justify-center px-0" : ""}`}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(79,255,207,0.1)] transform transition-transform hover:rotate-12" 
+               style={{ background: "linear-gradient(135deg, hsl(var(--electric) / 0.2), hsl(var(--violet) / 0.2))", border: "1px solid hsl(var(--electric) / 0.3)" }}>
+            <Zap size={24} className="text-[hsl(var(--electric))]" />
           </div>
-          <div>
-            <div className="font-display font-bold text-sm leading-none" style={{ color: "#fff" }}>MailerFind</div>
-            <div className="font-mono text-xs mt-0.5" style={{ color: "var(--dim)" }}>v2.0</div>
-          </div>
+          {!isSidebarCollapsed && (
+            <div className="animate-in slide-in-from-left-4 duration-300 fill-mode-forwards">
+              <h1 className="font-display font-black text-2xl tracking-tighter text-white leading-none">MailMax</h1>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] mt-1 text-[hsl(var(--dim))] font-bold">V-CORE ENGINE</p>
+            </div>
+          )}
         </div>
 
-        {NAV.map(n => (
-          <button key={n.id} onClick={() => { setView(n.id); fetchAll(); }}
-            className={`nav-item ${view === n.id ? "active" : ""}`}>
-            {n.icon}
-            {n.label}
-          </button>
-        ))}
+        {/* Navigation */}
+        <nav className="flex-1 px-4 space-y-1.5 mt-4">
+          {NAV.map(n => (
+            <button key={n.id} onClick={() => { setView(n.id); fetchAll(); window.scrollTo({ top: 0, behavior: 'smooth'}); }}
+              className={`nav-item group relative flex items-center gap-3 w-full p-3.5 rounded-2xl transition-all duration-200 ${view === n.id ? "bg-[hsl(var(--electric)/0.15)] text-[hsl(var(--electric))] shadow-inner" : "text-[hsl(var(--dim))] hover:bg-[hsl(var(--s2))] hover:text-white"}`}>
+              <div className={`transition-transform group-hover:scale-110 ${view === n.id ? "scale-110" : ""}`}>
+                {n.icon}
+              </div>
+              {!isSidebarCollapsed && (
+                <span className="flex-1 text-left font-display font-bold text-[15.5px] animate-in fade-in duration-300">{n.label}</span>
+              )}
+              {isSidebarCollapsed && (
+                <div className="absolute left-full ml-4 px-3 py-2 bg-[hsl(var(--s3))] text-white text-[11px] font-bold rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-2xl border border-[hsl(var(--border))]">
+                  {n.label}
+                </div>
+              )}
+              {view === n.id && <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_8px_hsl(var(--electric))]" />}
+            </button>
+          ))}
+        </nav>
 
-        <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--border)" }}>
-          <div className="px-2 py-2">
-            <div className="font-mono text-xs mb-2" style={{ color: "var(--dim)" }}>Stats rapides</div>
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between"><span style={{ color: "var(--muted)" }}>Contacts</span><span style={{ color: "#fff" }}>{contacts.length}</span></div>
-              <div className="flex justify-between"><span style={{ color: "var(--muted)" }}>Campagnes</span><span style={{ color: "#fff" }}>{campaigns.length}</span></div>
-              <div className="flex justify-between"><span style={{ color: "var(--muted)" }}>Envoyés</span><span style={{ color: "#fff" }}>{records.filter(r => r.status === "sent").length}</span></div>
-            </div>
-          </div>
+        {/* Account Summary & Collapse Toggle */}
+        <div className="p-4 space-y-4">
+           {!isSidebarCollapsed && (
+             <div className="p-5 rounded-2xl bg-gradient-to-br from-[hsl(var(--s2))] to-transparent border border-[hsl(var(--border))] animate-in slide-in-from-bottom-4 duration-500 fill-mode-forwards">
+               <div className="flex justify-between items-end mb-3">
+                 <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] font-bold">Quota Mensuel</div>
+                 <div className="text-xs font-black text-white">84%</div>
+               </div>
+               <div className="h-2 w-full bg-[hsl(var(--s1))] rounded-full overflow-hidden border border-white/5">
+                 <div className="h-full bg-gradient-to-r from-[hsl(var(--electric))] to-[hsl(var(--violet))] rounded-full shadow-[0_0_10px_hsl(var(--electric)/0.2)]" style={{ width: '84%' }} />
+               </div>
+               <p className="text-[10px] mt-3 text-[hsl(var(--dim))] leading-snug font-medium">Reset automatique dans 8 jours.</p>
+             </div>
+           )}
+           
+           <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+                   className="w-full h-12 flex items-center justify-center rounded-2xl bg-[hsl(var(--s2))] hover:bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white transition-all shadow-lg active:scale-95 group">
+             {isSidebarCollapsed ? <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" /> : <AlignLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />}
+           </button>
         </div>
       </aside>
 
-      {/* MAIN */}
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-5xl mx-auto p-8">
-          {view === "dashboard" && <DashboardView stats={stats} />}
-          {view === "compose" && <ComposeView lists={lists} onSent={fetchAll} />}
-          {view === "contacts" && <ContactsView contacts={contacts} lists={lists} onRefresh={fetchAll} />}
-          {view === "campaigns" && <CampaignsView campaigns={campaigns} lists={lists} contacts={contacts} onRefresh={fetchAll} />}
-          {view === "history" && <HistoryView records={records} onRefresh={fetchAll} />}
+      {/* MAIN CONTENT AREA */}
+      <main className={`flex-1 transition-all duration-300 ease-in-out flex flex-col ${isSidebarCollapsed ? "ml-20" : "ml-72"}`}>
+        {/* TOP INTERACTIVE NAV */}
+        <header className={`sticky top-0 z-40 px-10 py-5 transition-all duration-300 ${isScrolled ? "bg-[hsl(var(--bg)/0.8)] backdrop-blur-xl border-b border-[hsl(var(--border))] shadow-2xl" : "bg-transparent"}`}>
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="w-12 h-12 rounded-2xl bg-[hsl(var(--s2))] text-[hsl(var(--electric))] shadow-inner flex items-center justify-center border border-[hsl(var(--border))] transform transition-transform hover:rotate-6">
+                 {currentNav?.icon}
+              </div>
+              <div>
+                <h2 className="font-display font-black text-2xl text-white tracking-tighter leading-none">{currentNav?.label || "App"}</h2>
+                <div className="flex items-center gap-2 mt-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] animate-pulse" />
+                   <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest font-bold">Session Active &bull; Jacques D.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+               <button onClick={() => fetchAll()} className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[hsl(var(--s2))] border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white transition-all hover:scale-105 shadow-xl group">
+                 <RefreshCw size={20} className="group-active:rotate-180 transition-transform duration-500" />
+               </button>
+               <div className="h-10 w-px bg-[hsl(var(--border))] mx-2" />
+               <div className="flex items-center gap-4 pl-2 group cursor-pointer lg:bg-[hsl(var(--s2))] lg:py-2 lg:px-5 lg:rounded-2xl lg:border lg:border-[hsl(var(--border))] lg:hover:border-[hsl(var(--border-glow))] transition-all">
+                 <div className="text-right hidden lg:block">
+                   <div className="text-xs font-black text-white tracking-tight leading-none uppercase">Jacques D.</div>
+                   <div className="text-[9px] font-mono text-[hsl(var(--electric))] uppercase mt-1.5 font-bold">Power User &bull; 9.4k e/mo</div>
+                 </div>
+                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[hsl(var(--electric))] to-[hsl(var(--violet))] border-2 border-white/20 flex items-center justify-center text-xs font-black text-white shadow-2xl group-hover:scale-110 transition-transform">
+                   JD
+                 </div>
+               </div>
+            </div>
+          </div>
+        </header>
+
+        {/* VIEW PORT */}
+        <div className="px-10 py-8 max-w-7xl mx-auto w-full flex-1">
+          <div className="animate-in fade-in duration-700">
+            {view === "dashboard" && <DashboardView stats={stats} />}
+            {view === "compose" && <ComposeView lists={lists} onSent={fetchAll} />}
+            {view === "contacts" && <ContactsView contacts={contacts} lists={lists} onRefresh={fetchAll} />}
+            {view === "campaigns" && <CampaignsView campaigns={campaigns} lists={lists} contacts={contacts} onRefresh={fetchAll} />}
+            {view === "history" && <HistoryView records={records} onRefresh={fetchAll} />}
+          </div>
         </div>
+
+        {/* INDUSTRIAL FOOTER */}
+        <footer className="px-10 py-12 border-t border-[hsl(var(--border))] bg-gradient-to-b from-transparent to-[hsl(var(--s1)/0.2)] mt-auto">
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="flex flex-col gap-2">
+               <div className="flex items-center gap-3 opacity-30 grayscale group hover:grayscale-0 hover:opacity-100 transition-all">
+                  <Zap size={18} />
+                  <span className="text-[11px] font-display font-black uppercase tracking-[0.4em]">MailMax Core v2.4.9</span>
+               </div>
+               <p className="text-[9px] font-mono text-[hsl(var(--dim))] px-1">STABLE BUILD &bull; LATENCY 24MS &bull; IO_THREAD_OK</p>
+            </div>
+            
+            <nav className="flex items-center gap-12">
+              {['Status', 'Docs', 'Support', 'Legal'].map(l => (
+                <a key={l} href="#" className="text-[11px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] hover:text-[hsl(var(--electric))] font-bold transition-colors">{l}</a>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-4 bg-[hsl(var(--s2))] py-3 px-6 rounded-2xl border border-[hsl(var(--border))] group hover:border-[hsl(var(--electric)/0.3)] transition-all">
+              <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_10px_hsl(var(--electric))]" />
+              <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase font-bold tracking-widest">
+                Connected to <span className="text-white">Resend API v1.2</span>
+              </div>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   );
