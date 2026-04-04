@@ -22,8 +22,12 @@ export async function POST(req: NextRequest) {
       
       const job = setTimeout(async () => {
         try {
-          await sendViaProvider({ provider, from, to, subject, html: trackedHtml, attachments });
-          await supabase.from("email_records").update({ status: "sent", timestamp: new Date().toISOString() }).eq("id", id);
+          const providerId = await sendViaProvider({ provider, from, to, subject, html: trackedHtml, attachments });
+          await supabase.from("email_records").update({ 
+            status: "sent", 
+            provider_id: providerId,
+            timestamp: new Date().toISOString() 
+          }).eq("id", id);
         } catch (err: unknown) {
           const error = err instanceof Error ? err.message : String(err);
           await supabase.from("email_records").update({ status: "failed", error, timestamp: new Date().toISOString() }).eq("id", id);
@@ -37,8 +41,8 @@ export async function POST(req: NextRequest) {
 
   // Immediate
   try {
-    await sendViaProvider({ provider, from, to, subject, html: trackedHtml, attachments });
-    await supabase.from("email_records").insert({ id, provider, from, to, subject, status: "sent" });
+    const providerId = await sendViaProvider({ provider, from, to, subject, html: trackedHtml, attachments });
+    await supabase.from("email_records").insert({ id, provider, from, to, subject, provider_id: providerId, status: "sent" });
     return NextResponse.json({ success: true, id });
   } catch (err: unknown) {
     const error = err instanceof Error ? err.message : String(err);

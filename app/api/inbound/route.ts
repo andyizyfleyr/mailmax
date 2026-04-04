@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
       // 2. Mettre à jour le record
       let updates: any = {};
       if (eventType === "email.delivered") updates.status = "delivered";
+      if (eventType === "email.bounced") updates.status = "bounced";
       if (eventType === "email.opened") {
         updates.opens = (record.opens || 0) + 1;
         // Ajouter un événement d'analytics
