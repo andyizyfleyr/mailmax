@@ -614,7 +614,17 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   }
 
   async function createCampaign() {
-    if (!name || !subject || !listId || !fromEmail) return;
+    if (!name || !subject || !listId || !fromEmail) {
+      alert("⚠️ Tous les champs (Nom, Sujet, Audience, Expéditeur) sont requis !");
+      return;
+    }
+    
+    // Check if it's a mockup ID
+    if (!listId.includes("-") || listId === "list-1") {
+      alert("❌ Vous utilisez une audience de démonstration. Veuillez d'abord créer une vraie Audience dans l'onglet 'Audience' !");
+      return;
+    }
+
     try {
       const res = await fetch("/api/campaigns", {
         method: "POST",
@@ -624,19 +634,16 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
       
       const data = await res.json();
       if (!res.ok) {
-        alert("Erreur lors de la création : " + (data.error || "Erreur inconnue"));
+        alert("🚨 ERREUR CRITIQUE SUPABASE :\n\n" + (data.error || "Le serveur a refusé la création."));
         return;
       }
       
       setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt(""); setAttachments([]);
       onRefresh();
 
-      // IF NOT SCHEDULED -> START IMMEDIATELY
-      if (!scheduledAt && data.id) {
-        sendCampaign(data.id);
-      }
+      if (!scheduledAt && data.id) sendCampaign(data.id);
     } catch (err) {
-      console.error("Failed to create campaign:", err);
+      alert("🌐 Erreur de connexion au serveur. Vérifiez votre build Vercel.");
     }
   }
 
