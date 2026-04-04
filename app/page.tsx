@@ -1231,23 +1231,30 @@ export default function MailerFindApp() {
   const [inbound, setInbound] = useState<InboundEmail[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [errorBar, setErrorBar] = useState<string | null>(null);
 
   async function fetchAll() {
+    setErrorBar(null);
     try {
       const [a, c, camp, h, inc] = await Promise.all([
-        fetch("/api/analytics").then(r => r.json()),
-        fetch("/api/contacts").then(r => r.json()),
-        fetch("/api/campaigns").then(r => r.json()),
-        fetch("/api/send-email").then(r => r.json()),
-        fetch("/api/inbound").then(r => r.json()),
+        fetch("/api/analytics").then(r => r.json().catch(() => ({ error: "Erreur Analytics" }))),
+        fetch("/api/contacts").then(r => r.json().catch(() => ({ error: "Erreur Contacts" }))),
+        fetch("/api/campaigns").then(r => r.json().catch(() => ({ error: "Erreur Campagnes" }))),
+        fetch("/api/send-email").then(r => r.json().catch(() => ({ error: "Erreur Historique" }))),
+        fetch("/api/inbound").then(r => r.json().catch(() => ({ error: "Erreur Réception" }))),
       ]);
-      setStats(a);
-      setContacts(c.contacts || []);
-      setLists(c.lists || []);
+      
+      const errors = [a, c, camp, h, inc].filter(x => x?.error).map(x => x.error);
+      if (errors.length > 0) setErrorBar(`Erreur de synchronisation : ${errors.join(", ")}`);
+
+      setStats(a?.error ? null : a);
+      setContacts(Array.isArray(c?.contacts) ? c.contacts : []);
+      setLists(Array.isArray(c?.lists) ? c.lists : []);
       setCampaigns(Array.isArray(camp) ? camp : []);
       setRecords(Array.isArray(h) ? h : []);
       setInbound(Array.isArray(inc) ? inc : []);
     } catch (err) {
+      setErrorBar("Erreur critique de connexion au serveur.");
       console.error("Failed to fetch data:", err);
     }
   }
@@ -1274,8 +1281,18 @@ export default function MailerFindApp() {
   if (!isAuthorized) return <LoginGate onAuthorize={() => setIsAuthorized(true)} />;
 
   return (
-    <div className="flex min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--muted))] font-inter">
-      {/* SIDEBAR */}
+    <div className="flex h-screen bg-[hsl(var(--bg))] text-[hsl(var(--foreground))] overflow-hidden font-sans">
+      {/* Global Error Bar */}
+      {errorBar && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[200] max-w-lg w-full p-3 rounded-2xl bg-[hsl(var(--rose))] text-white shadow-2xl flex items-center justify-between gap-4 animate-in slide-in-from-top duration-300">
+           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest leading-none">
+             <XCircle size={14} className="shrink-0" /> {errorBar}
+           </div>
+           <button onClick={() => fetchAll()} className="p-2 hover:bg-white/10 rounded-lg shrink-0"><RefreshCw size={12} /></button>
+        </div>
+      )}
+
+      {/* Sidebar Navigation */}
       <aside className={`fixed inset-y-0 left-0 flex flex-col z-50 border-r border-[hsl(var(--border))] bg-[hsl(var(--bg))] transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-20" : "w-72"}`}>
         {/* Logo Section */}
         <div className={`flex items-center gap-4 p-6 mb-4 transition-all opacity-0 scale-95 animate-in fade-in zoom-in duration-500 fill-mode-forwards ${isSidebarCollapsed ? "justify-center px-0" : ""}`}>
