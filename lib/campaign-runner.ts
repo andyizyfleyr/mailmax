@@ -25,12 +25,13 @@ export async function runCampaign(campaignId: string) {
       return;
     }
 
-    // Update with total to show progress
+    // Update with total to show progress and clear any old error
     await supabase.from("campaigns").update({ 
       status: "sending", 
       stats_total: recipients.length,
       stats_sent: 0,
-      stats_failed: 0
+      stats_failed: 0,
+      error_message: null
     }).eq("id", campaignId);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -85,6 +86,9 @@ export async function runCampaign(campaignId: string) {
 
   } catch (globalErr: any) {
     console.error("Global campaign failure:", globalErr);
-    await supabase.from("campaigns").update({ status: "failed" }).eq("id", campaignId);
+    await supabase.from("campaigns").update({ 
+      status: "failed", 
+      error_message: globalErr.message || String(globalErr) 
+    }).eq("id", campaignId);
   }
 }

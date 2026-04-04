@@ -12,6 +12,7 @@ export async function GET() {
     listId: c.list_id, provider: c.provider, fromName: c.from_name, fromEmail: c.from_email,
     status: c.status, scheduledAt: c.scheduled_at, sentAt: c.sent_at, createdAt: c.created_at,
     attachments: c.attachments || [],
+    errorMessage: c.error_message,
     stats: {
       total: c.stats_total, sent: c.stats_sent, failed: c.stats_failed,
       opens: c.stats_opens, clicks: c.stats_clicks, unsubscribes: c.stats_unsubscribes

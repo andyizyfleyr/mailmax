@@ -685,9 +685,9 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                   </div>
                   
                   <div className="flex items-center gap-2 pt-2">
-                    {c.status === "draft" && (
+                    {(c.status === "draft" || c.status === "failed") && (
                       <button onClick={() => sendCampaign(c.id)} disabled={sending === c.id} className="btn btn-primary !py-2 !px-4 text-xs flex-1">
-                        {sending === c.id ? <><Loader2 size={12} className="spin" /> Envoi…</> : <><Play size={12} /> Lancer</>}
+                        {sending === c.id ? <><Loader2 size={12} className="spin" /> Envoi…</> : <><Play size={12} /> {c.status === "failed" ? "Réessayer" : "Lancer"}</>}
                       </button>
                     )}
                     {c.scheduledAt && c.status === "scheduled" && (
@@ -714,7 +714,17 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                       ))}
                    </div>
                    
-                   <div className="space-y-4 pt-2 border-t border-[hsl(var(--border))]">
+                   {c.errorMessage && (
+                      <div className="mt-4 p-3 rounded-lg bg-[hsl(var(--rose)/0.1)] border border-[hsl(var(--rose)/0.2)] flex items-start gap-3">
+                        <XCircle size={16} className="text-[hsl(var(--rose))] shrink-0 mt-0.5" />
+                        <div className="text-[11px] text-[hsl(var(--rose))] font-mono leading-tight">
+                          <span className="font-bold uppercase block mb-1">Erreur d'envoi :</span>
+                          {c.errorMessage}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="space-y-4 pt-2 border-t border-[hsl(var(--border))] mt-6">
                       <div className="flex justify-between items-center text-[11px] font-mono">
                         <span className="text-[hsl(var(--muted))] uppercase">Progression de l'envoi</span>
                         <span className="text-white">{c.stats.sent}/{c.stats.total} envoyés ({c.stats.total > 0 ? Math.round((c.stats.sent/c.stats.total)*100) : 0}%)</span>
