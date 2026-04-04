@@ -949,78 +949,103 @@ function InboxView({ emails, onRefresh }: { emails: InboundEmail[]; onRefresh: (
   }
 
   return (
-    <div className="animate-in pb-12">
-      <div className="flex items-center justify-between mb-8">
+    <div className="animate-in pb-12 flex flex-col h-[calc(100vh-140px)]">
+      <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
-          <h2 className="font-display font-bold text-2xl text-white">Boîte de Réception</h2>
-          <p className="text-sm text-[hsl(var(--muted))]">Gérez vos communications entrantes en temps réel</p>
+          <h2 className="font-display font-black text-3xl text-white tracking-tight leading-none">Boîte de Réception</h2>
+          <p className="text-sm text-[hsl(var(--muted))] mt-1">Gérez vos communications entrantes en temps réel</p>
         </div>
-        <div className="flex items-center gap-2 bg-[hsl(var(--s2))] p-1 rounded-xl border border-[hsl(var(--border))]">
+        <div className="flex items-center gap-2 p-1 rounded-2xl bg-[hsl(var(--s1))] border border-[hsl(var(--border))] shadow-inner">
           {["all", "unread", "read", "archived"].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-widest transition-all ${filter === f ? "bg-[hsl(var(--s3))] text-[hsl(var(--electric))] shadow-sm" : "text-[hsl(var(--dim))] hover:text-white"}`}>
+              className={`px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${filter === f ? "bg-[hsl(var(--electric)/0.15)] text-[hsl(var(--electric))] shadow-[0_0_20px_hsl(var(--electric)/0.2)]" : "text-[hsl(var(--dim))] hover:text-white hover:bg-[hsl(var(--s2))]"}`}>
               {f === "all" ? "Tous" : f === "unread" ? "Non lus" : f === "read" ? "Lus" : "Archivés"}
             </button>
           ))}
-          <div className="w-[1px] h-4 bg-[hsl(var(--border))] mx-1" />
-          <button onClick={onRefresh} className="p-2 text-[hsl(var(--dim))] hover:text-white transition-colors"><RefreshCw size={14} /></button>
+          <div className="w-px h-6 bg-[hsl(var(--border))] mx-2" />
+          <button onClick={onRefresh} className="p-2 text-[hsl(var(--dim))] hover:text-[hsl(var(--electric))] transition-colors group"><RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" /></button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className={`card !p-0 overflow-hidden border-[hsl(var(--border))] ${selectedEmail ? "lg:col-span-5" : "lg:col-span-12"}`}>
-          <div className="table-row font-mono text-[10px] tracking-widest uppercase bg-[hsl(var(--s1)/0.5)] !py-4" 
-               style={{ gridTemplateColumns: selectedEmail ? "140px 1fr 100px" : "140px 1.5fr 2fr 100px 140px", color: "hsl(var(--dim))" }}>
-            <span>Expéditeur</span><span>Sujet</span>{!selectedEmail && <span>Message</span>}<span>Statut</span><span className="text-right pr-6">Date</span>
+      <div className="flex flex-1 gap-6 overflow-hidden">
+        {/* Inbox List */}
+        <div className={`flex flex-col border border-[hsl(var(--border))] rounded-3xl bg-gradient-to-b from-[hsl(var(--s1))] to-[hsl(var(--bg))] shadow-2xl transition-all duration-500 ${selectedEmail ? "w-[400px] border-r-[hsl(var(--border))]" : "w-full"}`}>
+          <div className="p-5 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--s2)/0.3)] shrink-0">
+             <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest font-bold">Flux de Messages</div>
+             <div className="badge badge-draft">{filtered.length} messages</div>
           </div>
-          
-          {filtered.length === 0 ? (
-            <div className="py-24 text-center bg-gradient-to-b from-transparent to-[hsl(var(--s2)/0.2)]">
-              <Mail size={48} className="mx-auto mb-6 opacity-10 text-white" />
-              <p className="text-sm font-bold text-white mb-1">Boîte vide</p>
-              <p className="text-xs text-[hsl(var(--muted))]">Aucun message ne correspond à vos critères.</p>
-            </div>
-          ) : (
-            filtered.map((e, i) => (
-              <div key={e.id} onClick={() => { setSelectedEmail(e); if (e.status === "unread") updateStatus(e.id, "read"); }}
-                   className={`table-row !py-5 hover:bg-[hsl(var(--electric)/0.02)] transition-colors group cursor-pointer ${selectedEmail?.id === e.id ? "bg-[hsl(var(--electric)/0.05)] border-l-2 border-l-[hsl(var(--electric))]" : ""}`} 
-                   style={{ gridTemplateColumns: selectedEmail ? "140px 1fr 100px" : "140px 1.5fr 2fr 100px 140px", animationDelay: `${i * 0.02}s` }}>
-                <span className={`truncate font-bold text-[12px] group-hover:text-white transition-colors pr-4 ${e.status === "unread" ? "text-white" : "text-[hsl(var(--dim))]"}`}>{e.fromName || e.fromEmail}</span>
-                <span className={`truncate pr-4 text-[13px] ${e.status === "unread" ? "text-white font-bold" : "text-[hsl(var(--muted))]"}`}>{e.subject}</span>
-                {!selectedEmail && <span className="truncate text-[11px] text-[hsl(var(--dim))] pr-4">{e.text}</span>}
-                <span className="flex items-center gap-1.5"><StatusBadge s={e.status} /></span>
-                <span className="text-[11px] font-mono text-[hsl(var(--dim))] text-right pr-6">{relTime(e.timestamp)}</span>
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {filtered.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center px-6 opacity-60">
+                <div className="w-20 h-20 rounded-full bg-[hsl(var(--s2))] flex items-center justify-center text-[hsl(var(--dim))] mb-6 shadow-inner border border-[hsl(var(--border))]">
+                  <Mail size={32} />
+                </div>
+                <h3 className="font-display font-bold text-lg text-white mb-2">Boîte vide</h3>
+                <p className="text-xs text-[hsl(var(--muted))] max-w-[200px] leading-relaxed">Aucun message ne correspond à ce filtre actuellement.</p>
               </div>
-            ))
-          )}
+            ) : (
+              <div className="flex flex-col divide-y divide-[hsl(var(--border)/0.5)]">
+                {filtered.map((e, i) => (
+                  <button key={e.id} onClick={() => { setSelectedEmail(e); if (e.status === "unread") updateStatus(e.id, "read"); }}
+                       className={`text-left p-5 hover:bg-[hsl(var(--electric)/0.03)] transition-all group relative overflow-hidden flex flex-col items-stretch ${selectedEmail?.id === e.id ? "bg-[hsl(var(--electric)/0.08)]" : ""}`}
+                       style={{ animationDelay: (i * 0.05) + "s" }}>
+                    <div className={`absolute top-0 bottom-0 left-0 w-1 transition-all ${selectedEmail?.id === e.id ? "bg-[hsl(var(--electric))] shadow-[0_0_10px_hsl(var(--electric))]" : "bg-transparent group-hover:bg-[hsl(var(--electric)/0.3)]"}`} />
+                    {selectedEmail?.id !== e.id && e.status === "unread" && <div className="absolute top-1/2 left-3 -translate-y-1/2 w-2 h-2 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_8px_hsl(var(--electric))]" />}
+                    <div className="flex items-center justify-between mb-2 pl-2">
+                       <span className={`truncate font-bold text-sm transition-colors pr-2 ${e.status === "unread" ? "text-white" : "text-[hsl(var(--muted))]"}`}>{e.fromName || e.fromEmail.split('@')[0]}</span>
+                       <span className="text-[10px] font-mono text-[hsl(var(--dim))] whitespace-nowrap shrink-0 font-bold">{relTime(e.timestamp)}</span>
+                    </div>
+                    <div className={`truncate mb-1.5 text-sm pl-2 ${e.status === "unread" ? "text-white font-bold" : "text-[hsl(var(--dim))]"}`}>{e.subject || "(Sans objet)"}</div>
+                    <div className="truncate text-xs text-[hsl(var(--dim))] pr-4 pl-2 leading-relaxed font-mono opacity-60 group-hover:opacity-100 transition-opacity whitespace-normal line-clamp-2">{(e.text || "").substring(0, 100)}...</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Message Content */}
         {selectedEmail && (
-          <div className="lg:col-span-7 card p-8 space-y-6 animate-in slide-in-from-right-4">
-            <div className="flex items-start justify-between border-b border-[hsl(var(--border))] pb-6">
-              <div className="space-y-1">
-                <h3 className="font-display font-bold text-xl text-white">{selectedEmail.subject}</h3>
-                <div className="flex items-center gap-3 text-[11px] font-mono">
-                  <span className="text-[hsl(var(--dim))] uppercase">De :</span> 
-                  <span className="text-[hsl(var(--electric))]">{selectedEmail.fromName ? `${selectedEmail.fromName} <${selectedEmail.fromEmail}>` : selectedEmail.fromEmail}</span>
+          <div className="flex-1 flex flex-col border border-[hsl(var(--border))] rounded-3xl bg-[hsl(var(--s1))] shadow-2xl relative overflow-hidden animate-in slide-in-from-right-8 duration-500">
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--electric)/0.5)] to-transparent opacity-50" />
+            <div className="p-10 border-b border-[hsl(var(--border))] flex items-start justify-between bg-gradient-to-b from-[hsl(var(--s2))] to-transparent shrink-0">
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center gap-4">
+                  <h3 className="font-display font-black text-2xl text-white tracking-tight leading-tight">{selectedEmail.subject || "(Sans objet)"}</h3>
+                  <StatusBadge s={selectedEmail.status} />
+                </div>
+                <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[hsl(var(--electric))] to-[hsl(var(--violet))] flex items-center justify-center text-white font-black text-xl shadow-[0_5px_20px_-5px_hsl(var(--electric))]">
+                    {(selectedEmail.fromName || selectedEmail.fromEmail)[0].toUpperCase()}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-base font-bold text-white">{selectedEmail.fromName || selectedEmail.fromEmail}</div>
+                    <div className="text-xs text-[hsl(var(--muted))] font-mono tracking-widest uppercase">{selectedEmail.fromEmail} &bull; <span className="text-[hsl(var(--dim))]">{new Date(selectedEmail.timestamp).toLocaleString("fr-FR")}</span></div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-[hsl(var(--bg))] p-1.5 rounded-2xl border border-[hsl(var(--border))] shadow-inner">
                 <button onClick={() => updateStatus(selectedEmail.id, selectedEmail.status === "archived" ? "read" : "archived")} 
-                        className="btn btn-ghost !p-2" title={selectedEmail.status === "archived" ? "Désarchiver" : "Archiver"}>
-                  <Download size={16} />
+                        className="p-3 rounded-xl text-[hsl(var(--dim))] hover:text-white hover:bg-[hsl(var(--s3))] transition-colors" title={selectedEmail.status === "archived" ? "Désarchiver" : "Archiver"}>
+                  <Download size={18} />
                 </button>
-                <button onClick={() => deleteEmail(selectedEmail.id)} className="btn btn-ghost !p-2 text-[hsl(var(--rose))]" title="Supprimer">
-                  <Trash2 size={16} />
+                <button onClick={() => deleteEmail(selectedEmail.id)} className="p-3 rounded-xl text-[hsl(var(--dim))] hover:text-[hsl(var(--rose))] hover:bg-[hsl(var(--rose)/0.1)] transition-colors" title="Supprimer">
+                  <Trash2 size={18} />
                 </button>
-                <button onClick={() => setSelectedEmail(null)} className="btn btn-ghost !p-2" title="Fermer">
-                  <X size={16} />
+                <div className="w-px h-6 bg-[hsl(var(--border))]" />
+                <button onClick={() => setSelectedEmail(null)} className="p-3 rounded-xl text-[hsl(var(--dim))] hover:text-white hover:bg-[hsl(var(--s3))] transition-colors" title="Fermer">
+                  <X size={18} />
                 </button>
               </div>
             </div>
             
-            <div className="bg-white rounded-xl p-8 min-h-[400px] text-zinc-900 overflow-auto leading-relaxed"
-                 dangerouslySetInnerHTML={{ __html: selectedEmail.html || `<div class="font-sans whitespace-pre-wrap">${selectedEmail.text}</div>` }} />
+            <div className="flex-1 overflow-auto p-12 bg-white/5 relative">
+               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[hsl(var(--s2)/0.5)] via-[hsl(var(--s1)/0.8)] to-[hsl(var(--bg))] pointer-events-none" />
+               <div className="max-w-4xl mx-auto bg-white/10 rounded-[32px] p-12 border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl relative z-10">
+                 <div className="prose prose-invert max-w-none text-zinc-100 leading-loose font-sans text-[15px]"
+                      dangerouslySetInnerHTML={{ __html: selectedEmail.html || `<div class="whitespace-pre-wrap font-mono text-sm leading-relaxed">${selectedEmail.text}</div>` }} />
+               </div>
+            </div>
           </div>
         )}
       </div>
@@ -1034,53 +1059,65 @@ function HistoryView({ records, onRefresh }: { records: EmailRecord[]; onRefresh
   const filtered = records.filter(r => filter === "all" || r.status === filter);
 
   return (
-    <div className="animate-in pb-12">
+    <div className="animate-in pb-12 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="font-display font-bold text-2xl text-white">Journal d'Activité</h2>
-          <p className="text-sm text-[hsl(var(--muted))]">Suivi détaillé de tous les emails envoyés ou programmés</p>
+          <h2 className="font-display font-black text-3xl text-white tracking-tight leading-none">Journal d'Activité</h2>
+          <p className="text-sm text-[hsl(var(--muted))] mt-1">Supervisez l'ensemble des flux d'envoi et leurs performances en temps réel</p>
         </div>
-        <div className="flex items-center gap-2 bg-[hsl(var(--s2))] p-1 rounded-xl border border-[hsl(var(--border))]">
+        <div className="flex items-center gap-2 p-1 rounded-2xl bg-[hsl(var(--s1))] border border-[hsl(var(--border))] shadow-inner">
           {["all", "sent", "failed", "scheduled"].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-widest transition-all ${filter === f ? "bg-[hsl(var(--s3))] text-[hsl(var(--electric))] shadow-sm" : "text-[hsl(var(--dim))] hover:text-white"}`}>
+              className={`px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${filter === f ? "bg-[hsl(var(--electric)/0.15)] text-[hsl(var(--electric))] shadow-[0_0_20px_hsl(var(--electric)/0.2)]" : "text-[hsl(var(--dim))] hover:text-white hover:bg-[hsl(var(--s2))]"}`}>
               {f === "all" ? "Tous" : f}
             </button>
           ))}
-          <div className="w-[1px] h-4 bg-[hsl(var(--border))] mx-1" />
-          <button onClick={onRefresh} className="p-2 text-[hsl(var(--dim))] hover:text-white transition-colors"><RefreshCw size={14} /></button>
+          <div className="w-px h-6 bg-[hsl(var(--border))] mx-2" />
+          <button onClick={onRefresh} className="p-2 text-[hsl(var(--dim))] hover:text-[hsl(var(--electric))] transition-colors group"><RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" /></button>
         </div>
       </div>
 
-      <div className="card !rounded-2xl overflow-hidden border-[hsl(var(--border))]">
-        <div className="table-row font-mono text-[10px] tracking-widest uppercase bg-[hsl(var(--s1)/0.5)] !py-4" 
-             style={{ gridTemplateColumns: "100px 1.5fr 2fr 100px 100px 100px 140px", color: "hsl(var(--dim))" }}>
+      <div className="card !rounded-3xl overflow-hidden border-[hsl(var(--border))] shadow-2xl bg-gradient-to-br from-[hsl(var(--s1))] to-[hsl(var(--bg))] relative">
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--electric)/0.2)] to-transparent" />
+        
+        <div className="table-row font-mono text-[10px] font-bold tracking-[0.2em] uppercase bg-[hsl(var(--s2)/0.5)] border-b border-[hsl(var(--border))] !py-5" 
+             style={{ gridTemplateColumns: "100px 1.5fr 2fr 100px 100px 100px 140px", color: "hsl(var(--muted))" }}>
           <span>Source</span><span>Expéditeur</span><span>Objet</span><span className="text-center">Ouverts</span><span className="text-center">Clics</span><span>Statut</span><span className="text-right pr-6">Date</span>
         </div>
         
         {filtered.length === 0 ? (
-          <div className="py-24 text-center bg-gradient-to-b from-transparent to-[hsl(var(--s2)/0.2)]">
-            <History size={48} className="mx-auto mb-6 opacity-10 text-white" />
-            <p className="text-sm font-bold text-white mb-1">Aucun enregistrement</p>
-            <p className="text-xs text-[hsl(var(--muted))]">Votre historique d'envoi est vide pour le moment.</p>
+          <div className="py-32 flex flex-col items-center justify-center text-center">
+            <div className="w-24 h-24 rounded-full bg-[hsl(var(--s2))] flex items-center justify-center text-[hsl(var(--dim))] mb-6 shadow-inner border border-[hsl(var(--border))]">
+              <History size={40} />
+            </div>
+            <h3 className="font-display font-black text-xl text-white mb-2">Aucun enregistrement</h3>
+            <p className="text-sm text-[hsl(var(--muted))] max-w-[300px]">Votre historique de transmission est vide. Démarrez une campagne pour voir apparaître les données de diagnostic.</p>
           </div>
         ) : (
-          filtered.map((r, i) => (
-            <div key={r.id} className="table-row !py-5 hover:bg-[hsl(var(--electric)/0.02)] transition-colors group" 
-                 style={{ gridTemplateColumns: "100px 1.5fr 2fr 100px 100px 100px 140px", animationDelay: `${i * 0.02}s` }}>
-              <ProviderBadge p={r.provider} />
-              <span className="truncate font-mono text-[11px] text-[hsl(var(--dim))] group-hover:text-[hsl(var(--muted))] transition-colors pr-4">{r.from}</span>
-              <span className="truncate text-white font-medium pr-4">{r.subject}</span>
-              <span className="flex items-center justify-center gap-1.5 font-mono text-[11px] text-[hsl(var(--muted))]">
-                <Eye size={12} className="opacity-50" /> {r.opens}
-              </span>
-              <span className="flex items-center justify-center gap-1.5 font-mono text-[11px] text-[hsl(var(--muted))]">
-                <MousePointer size={12} className="opacity-50" /> {r.clicks}
-              </span>
-              <span><StatusBadge s={r.status} /></span>
-              <span className="text-[11px] font-mono text-[hsl(var(--dim))] text-right pr-6">{relTime(r.timestamp)}</span>
-            </div>
-          ))
+          <div className="divide-y divide-[hsl(var(--border)/0.5)]">
+            {filtered.map((r, i) => (
+              <div key={r.id} className="table-row !py-5 hover:bg-[hsl(var(--electric)/0.03)] hover:scale-[1.002] transition-all duration-300 group cursor-default" 
+                   style={{ gridTemplateColumns: "100px 1.5fr 2fr 100px 100px 100px 140px", animationDelay: (i * 0.03) + "s" }}>
+                <ProviderBadge p={r.provider} />
+                <span className="truncate font-mono text-xs text-[hsl(var(--dim))] group-hover:text-[hsl(var(--muted))] transition-colors pr-4">{r.from}</span>
+                <span className="truncate text-white font-bold pr-4 group-hover:text-[hsl(var(--electric))] transition-colors text-sm">{r.subject}</span>
+                <span className="flex items-center justify-center gap-1.5 font-mono text-xs font-bold text-white">
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-md ${r.opens > 0 ? "bg-[hsl(var(--violet)/0.2)] text-[hsl(var(--violet))]" : "bg-[hsl(var(--s3))] text-[hsl(var(--dim))]"}`}>
+                    <Eye size={12} />
+                  </div>
+                  {r.opens}
+                </span>
+                <span className="flex items-center justify-center gap-1.5 font-mono text-xs font-bold text-white">
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-md ${r.clicks > 0 ? "bg-[hsl(var(--amber)/0.2)] text-[hsl(var(--amber))]" : "bg-[hsl(var(--s3))] text-[hsl(var(--dim))]"}`}>
+                    <MousePointer size={12} />
+                  </div>
+                  {r.clicks}
+                </span>
+                <span><StatusBadge s={r.status} /></span>
+                <span className="text-[11px] font-mono text-[hsl(var(--dim))] text-right pr-6 font-bold">{relTime(r.timestamp)}</span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -1089,15 +1126,31 @@ function HistoryView({ records, onRefresh }: { records: EmailRecord[]; onRefresh
 
 // ===================== DASHBOARD VIEW =====================
 function DashboardView({ stats }: { stats: DashboardStats | null }) {
-  if (!stats) return <div className="flex flex-col items-center justify-center h-96 gap-4">
-    <Loader2 size={32} className="spin text-[hsl(var(--electric))]" />
-    <p className="text-xs font-mono text-[hsl(var(--dim))] uppercase tracking-widest animate-pulse">Initialisation du dashboard…</p>
+  if (!stats) return <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+    <div className="w-16 h-16 rounded-full border-t-2 border-r-2 border-[hsl(var(--electric))] animate-spin" />
+    <p className="text-[10px] font-mono text-[hsl(var(--electric))] uppercase tracking-[0.2em] animate-pulse">Initialisation V-Core…</p>
   </div>;
 
   return (
-    <div className="animate-in space-y-8 pb-12">
+    <div className="animate-in space-y-10 pb-20 max-w-7xl mx-auto">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <h2 className="font-display font-black text-4xl text-white tracking-tighter uppercase italic leading-none">Centre de Contrôle</h2>
+          <div className="flex items-center gap-3">
+             <div className="w-2 h-2 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_10px_hsl(var(--electric))]" />
+             <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-[0.3em] font-bold">MailMax Analytics Engine</p>
+          </div>
+        </div>
+        <div className="flex bg-[hsl(var(--s1))] p-1.5 rounded-2xl border border-[hsl(var(--border))] shadow-inner">
+           {["7J", "30J", "YTD", "ALL"].map(d => (
+             <button key={d} className={`px-5 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${d === "7J" ? "bg-[hsl(var(--electric)/0.15)] text-[hsl(var(--electric))] shadow-[0_0_20px_hsl(var(--electric)/0.2)]" : "text-[hsl(var(--dim))] hover:text-white"}`}>{d}</button>
+           ))}
+        </div>
+      </div>
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard value={fmt(stats.totalSent)} label="Emails envoyés" icon={<Send size={20} />} color="var(--electric)" delta="+12.5%" trend="up" />
         <StatCard value={fmt(stats.totalOpens)} label="Nombre d'ouverture" icon={<Eye size={20} />} color="var(--violet)" delta="+4.3%" trend="up" />
         <StatCard value={fmt(stats.totalClicks)} label="Nombre de clic" icon={<MousePointer size={20} />} color="var(--amber)" delta="-1.2%" trend="down" />
@@ -1105,52 +1158,54 @@ function DashboardView({ stats }: { stats: DashboardStats | null }) {
       </div>
 
       {/* Main Stats Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card p-8 lg:col-span-2 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <BarChart2 size={120} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 relative overflow-hidden bg-[hsl(var(--s1))] border border-[hsl(var(--border))] rounded-[32px] p-8 shadow-2xl">
+          <div className="absolute top-0 right-0 p-8 opacity-5 text-white/10 pointer-events-none">
+            <BarChart2 size={180} />
           </div>
-          <div className="flex items-center justify-between mb-8">
+          <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--bg)/0.5)] to-transparent pointer-events-none" />
+          
+          <div className="flex items-start justify-between mb-8 relative z-10">
             <div>
-              <h3 className="font-display font-bold text-xl text-white">Analyse de Performance</h3>
-              <p className="text-xs text-[hsl(var(--muted))] mt-1">Activité de diffusion sur les 7 derniers jours</p>
+              <h3 className="font-display font-black text-2xl text-white tracking-tight">Analyse de Performance</h3>
+              <p className="text-xs text-[hsl(var(--muted))] mt-1 font-medium">Activité de diffusion sur les 7 derniers jours</p>
             </div>
-            <div className="flex gap-2">
-              <span className="badge badge-sent">Actif</span>
-            </div>
+            <div className="badge badge-green flex items-center gap-2 px-3 py-1.5"><div className="w-1.5 h-1.5 rounded-full bg-green-400 border border-green-200" />En direct</div>
           </div>
           
-          <div className="h-[280px] w-full">
+          <div className="h-[320px] w-full relative z-10">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={stats.recentActivity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--electric))" stopOpacity={0.2} />
+                    <stop offset="5%" stopColor="hsl(var(--electric))" stopOpacity={0.4} />
                     <stop offset="95%" stopColor="hsl(var(--electric))" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gOpens" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--violet))" stopOpacity={0.15} />
+                    <stop offset="5%" stopColor="hsl(var(--violet))" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="hsl(var(--violet))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10, fontFamily: "Space Mono" }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} />
+                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border))" vertical={false} opacity={0.5} />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10, fontFamily: "Space Mono", fontWeight: "bold" }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10, fontWeight: "bold" }} />
                 <Tooltip 
-                  contentStyle={{ background: "hsl(var(--bg))", border: "1px solid hsl(var(--border))", borderRadius: "12px", boxShadow: "0 10px 40px rgba(0,0,0,0.5)", fontFamily: "Outfit" }}
-                  cursor={{ stroke: "hsl(var(--electric) / 0.2)", strokeWidth: 2 }}
+                  contentStyle={{ background: "rgba(12, 12, 26, 0.9)", backdropFilter: "blur(12px)", border: "1px solid hsl(var(--border))", borderRadius: "16px", boxShadow: "0 20px 40px rgba(0,0,0,0.8)", fontFamily: "Outfit" }}
+                  cursor={{ stroke: "hsl(var(--electric) / 0.5)", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
-                <Area type="monotone" dataKey="sent" stroke="hsl(var(--electric))" strokeWidth={3} fill="url(#gSent)" name="Envoyés" activeDot={{ r: 6, strokeWidth: 0, fill: "white" }} />
-                <Area type="monotone" dataKey="opens" stroke="hsl(var(--violet))" strokeWidth={3} fill="url(#gOpens)" name="Ouverts" />
+                <Area type="monotone" dataKey="sent" stroke="hsl(var(--electric))" strokeWidth={4} fill="url(#gSent)" name="Envoyés" activeDot={{ r: 6, strokeWidth: 2, stroke: "hsl(var(--bg))", fill: "hsl(var(--electric))" }} />
+                <Area type="monotone" dataKey="opens" stroke="hsl(var(--violet))" strokeWidth={4} fill="url(#gOpens)" name="Ouverts" activeDot={{ r: 6, strokeWidth: 2, stroke: "hsl(var(--bg))", fill: "hsl(var(--violet))" }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="flex flex-col gap-6">
-          <div className="card p-6 flex-1">
-            <h3 className="font-display font-bold text-lg text-white mb-6">Top Campagnes</h3>
-            <div className="space-y-5">
+          <div className="flex-1 bg-[hsl(var(--s1))] border border-[hsl(var(--border))] rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
+            <h3 className="font-display font-black text-xl text-white mb-2">Campagnes Tops</h3>
+            <p className="text-[10px] text-[hsl(var(--muted))] uppercase tracking-widest font-mono font-bold mb-8">Par taux d'ouverture</p>
+            
+            <div className="space-y-6">
               {stats.topCampaigns.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 opacity-30 gap-3 border-2 border-dashed border-[hsl(var(--border))] rounded-2xl">
                   <BarChart2 size={32} />
@@ -1158,59 +1213,48 @@ function DashboardView({ stats }: { stats: DashboardStats | null }) {
                 </div>
               ) : (
                 stats.topCampaigns.slice(0, 4).map((c, i) => (
-                  <div key={i} className="flex items-center gap-4 group">
-                    <div className="w-10 h-10 rounded-xl bg-[hsl(var(--s2))] flex items-center justify-center text-xs font-bold border border-[hsl(var(--border))] text-white transition-transform group-hover:scale-105" 
-                         style={{ color: i === 0 ? "hsl(var(--electric))" : "white", borderColor: i === 0 ? "hsl(var(--electric) / 0.2)" : "hsl(var(--border))" }}>
-                      0{i+1}
+                  <div key={i} className="flex flex-col gap-2 group cursor-default">
+                    <div className="flex justify-between items-end">
+                      <div className="flex items-center gap-3">
+                         <div className="text-[10px] font-black font-mono" style={{ color: i === 0 ? "hsl(var(--electric))" : "hsl(var(--dim))" }}>0{i+1}</div>
+                         <div className="text-sm font-bold text-white truncate max-w-[150px] group-hover:text-[hsl(var(--electric))] transition-colors">{c.name}</div>
+                      </div>
+                      <div className="text-xs font-mono text-white font-bold">{c.opens} <span className="opacity-50 text-[9px] uppercase">ouvertures</span></div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-end mb-1">
-                        <div className="text-[13px] font-bold text-white truncate">{c.name}</div>
-                        <div className="text-[11px] font-mono text-[hsl(var(--electric))]">{c.opens} ouvertures</div>
-                      </div>
-                      <div className="h-1.5 w-full bg-[hsl(var(--s2))] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-1000" 
-                             style={{ width: `${Math.min(100, (c.opens / (stats.totalSent || 1)) * 100)}%`, background: i === 0 ? "hsl(var(--electric))" : "hsl(var(--violet))" }} />
-                      </div>
+                    <div className="h-2 w-full bg-[hsl(var(--s2))] rounded-full overflow-hidden p-[1px]">
+                      <div className="h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_hsl(var(--electric)/0.5)]" 
+                           style={{ width: `${Math.min(100, (c.opens / (stats.totalSent || 1)) * 100)}%`, background: i === 0 ? "hsl(var(--electric))" : "hsl(var(--violet))" }} />
                     </div>
                   </div>
                 ))
               )}
             </div>
             {stats.topCampaigns.length > 0 && (
-              <button className="btn btn-ghost w-full mt-6 justify-center text-[10px] uppercase font-mono tracking-widest">
-                Voir toutes les campagnes
+              <button className="w-full mt-8 py-4 rounded-xl border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white hover:bg-[hsl(var(--s2))] transition-colors font-mono text-[10px] uppercase tracking-widest font-bold">
+                Afficher l'historique complet
               </button>
             )}
-          </div>
-
-          <div className="card p-6 bg-gradient-to-br from-[hsl(var(--electric) / 0.1)] to-transparent border-[hsl(var(--electric) / 0.15)] relative overflow-hidden">
-            <Zap className="absolute -bottom-4 -right-4 w-24 h-24 text-[hsl(var(--electric))] opacity-5" />
-            <h4 className="font-display font-bold text-white text-sm mb-2">Besoin d'aide ?</h4>
-            <p className="text-xs text-[hsl(var(--muted))] leading-relaxed mb-4">Optimisez vos taux d'ouverture en personnalisant vos objets d'emails.</p>
-            <button className="btn btn-primary !py-2 !px-4 text-xs w-full justify-center">
-              Consulter le Guide <ExternalLink size={12} />
-            </button>
           </div>
         </div>
       </div>
 
       {/* Tips Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { icon: <TrendingUp size={16} />, title: "Taux d'ouverture cible", value: "25%+", color: "var(--electric)", tip: "Travaillez vos objets d'emails." },
-          { icon: <MousePointer size={16} />, title: "Taux de clic cible", value: "5%+", color: "var(--violet)", tip: "Soignez vos boutons d'action." },
-          { icon: <UserMinus size={16} />, title: "Désabonnements max", value: "<0.5%", color: "var(--amber)", tip: "Évitez de saturer vos listes." },
+          { icon: <TrendingUp size={20} />, title: "Taux d'ouverture", value: "Objectif: 30%+", color: "var(--electric)", desc: "Misez sur des objets courts, personnalisés, suscitant la curiosité." },
+          { icon: <MousePointer size={20} />, title: "Taux de clic", value: "Objectif: 7%+", color: "var(--violet)", desc: "Un seul Call-To-Action (CTA) visible et descriptif." },
+          { icon: <UserMinus size={20} />, title: "Désabonnements", value: "Objectif: <1%", color: "var(--amber)", desc: "Assurez-vous d'apporter de la valeur, sans pression de vente." },
         ].map((t, i) => (
-          <div key={i} className="card p-5 flex items-center gap-4 hover:border-[hsl(var(--border-glow))] transition-all">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `hsl(${t.color} / 0.1)`, color: `hsl(${t.color})` }}>
+          <div key={i} className="bg-[hsl(var(--s1))] border border-[hsl(var(--border))] rounded-[24px] p-6 hover:border-[hsl(var(--electric)/0.2)] transition-colors group relative overflow-hidden">
+            <div className="absolute -right-4 -bottom-4 opacity-[0.03] text-[hsl(var(--electric))] group-hover:scale-110 transition-transform duration-500">
+               {t.icon}
+            </div>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 border" style={{ background: `hsl(${t.color} / 0.1)`, color: `hsl(${t.color})`, borderColor: `hsl(${t.color} / 0.2)` }}>
               {t.icon}
             </div>
-            <div>
-              <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest">{t.title}</div>
-              <div className="text-lg font-bold text-white">{t.value}</div>
-              <p className="text-[11px] text-[hsl(var(--muted))]">{t.tip}</p>
-            </div>
+            <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest font-bold mb-1">{t.title}</div>
+            <div className="text-xl font-bold text-white mb-2">{t.value}</div>
+            <p className="text-xs text-[hsl(var(--muted))] leading-relaxed">{t.desc}</p>
           </div>
         ))}
       </div>
