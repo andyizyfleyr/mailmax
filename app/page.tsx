@@ -1137,27 +1137,8 @@ export default function MailerFindApp() {
 
         {/* INDUSTRIAL FOOTER */}
         <footer className="px-10 py-12 border-t border-[hsl(var(--border))] bg-gradient-to-b from-transparent to-[hsl(var(--s1)/0.2)] mt-auto">
-          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="flex flex-col gap-2">
-               <div className="flex items-center gap-3 opacity-30 grayscale group hover:grayscale-0 hover:opacity-100 transition-all">
-                  <Zap size={18} />
-                  <span className="text-[11px] font-display font-black uppercase tracking-[0.4em]">MailMax Core v2.4.9</span>
-               </div>
-               <p className="text-[9px] font-mono text-[hsl(var(--dim))] px-1">STABLE BUILD &bull; LATENCY 24MS &bull; IO_THREAD_OK</p>
-            </div>
-            
-            <nav className="flex items-center gap-12">
-              {['Statut', 'Docs', 'Support', 'Légal'].map(l => (
-                <a key={l} href="#" className="text-[11px] font-mono uppercase tracking-[0.2em] text-[hsl(var(--dim))] hover:text-[hsl(var(--electric))] font-bold transition-colors">{l}</a>
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-4 bg-[hsl(var(--s2))] py-3 px-6 rounded-2xl border border-[hsl(var(--border))] group hover:border-[hsl(var(--electric)/0.3)] transition-all">
-              <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] shadow-[0_0_10px_hsl(var(--electric))]" />
-              <div className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase font-bold tracking-widest">
-                Connected to <span className="text-white">Cloud Engine v1.2</span>
-              </div>
-            </div>
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest">&copy; 2024 MailMax &bull; Tous droits réservés.</p>
           </div>
         </footer>
       </main>
