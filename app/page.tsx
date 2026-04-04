@@ -589,7 +589,22 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   const [provider, setProvider] = useState<EmailProvider>("resend");
   const [fromName, setFromName] = useState("CrediWize"); const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: useCallback((files: File[]) => {
+      files.forEach(f => {
+        const r = new FileReader();
+        r.onload = e => {
+          const b64 = (e.target?.result as string).split(",")[1];
+          setAttachments(prev => [...prev, { name: f.name, content: b64, type: f.type }]);
+        };
+        r.readAsDataURL(f);
+      });
+    }, []),
+    noClick: true, noKeyboard: true,
+  });
 
   const [step, setStep] = useState(1);
 
@@ -603,9 +618,9 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
     await fetch("/api/campaigns", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, scheduledAt: scheduledAt || undefined }),
+      body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments, scheduledAt: scheduledAt || undefined }),
     });
-    setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt("");
+    setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt(""); setAttachments([]);
     onRefresh();
   }
 
@@ -818,9 +833,34 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                     <div className="rounded-2xl overflow-hidden border border-[hsl(var(--border))] shadow-inner" style={{ background: "hsl(var(--s2))" }}>
                       <EditorToolbar exec={execCmd} />
                       <div ref={editorRef} contentEditable onInput={() => { if (editorRef.current) setHtml(editorRef.current.innerHTML); }}
-                        data-placeholder="Commencez à rédiger..." className="rich-editor px-6 py-6 text-sm" suppressContentEditableWarning style={{ minHeight: 220, maxHeight: 300, overflowY: 'auto' }} />
+                        data-placeholder="Commencez à rédiger..." className="rich-editor px-6 py-6 text-sm" suppressContentEditableWarning style={{ minHeight: 180, maxHeight: 250, overflowY: 'auto' }} />
                     </div>
                   </div>
+                  
+                  {/* Dropzone for Campaigns */}
+                  <div>
+                    <label className="label flex items-center gap-2 mb-3">
+                      <Paperclip size={14} className="text-[hsl(var(--electric))]" /> Pièces jointes
+                    </label>
+                    <div {...getRootProps()} className={`rounded-xl p-6 border-2 border-dashed transition-all cursor-pointer flex flex-col items-center gap-3 ${isDragActive ? "border-[hsl(var(--electric))] bg-[hsl(var(--electric)/0.05)]" : "border-[hsl(var(--border))] hover:border-[hsl(var(--dim))]"}`}>
+                      <input {...getInputProps()} />
+                      <Upload size={24} className={isDragActive ? "text-[hsl(var(--electric))]" : "text-[hsl(var(--dim))]"} />
+                      <p className="text-[9px] font-mono text-[hsl(var(--muted))] uppercase">Glissez vos fichiers ici</p>
+                    </div>
+                    {attachments.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        {attachments.map((a, i) => (
+                          <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[10px] font-mono">
+                            <span className="truncate flex-1 text-[hsl(var(--muted))]">{a.name}</span>
+                            <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="text-[hsl(var(--rose))] hover:scale-110 transition-transform ml-2">
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="p-5 rounded-2xl bg-[hsl(var(--s2) / 0.3)] border border-dashed border-[hsl(var(--border))]">
                     <label className="label flex items-center gap-2 mb-4">
                       <Calendar size={14} className="text-[hsl(var(--electric))]" /> Planification optionnelle

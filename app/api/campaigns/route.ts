@@ -11,6 +11,7 @@ export async function GET() {
     id: c.id, name: c.name, subject: c.subject, html: c.html,
     listId: c.list_id, provider: c.provider, fromName: c.from_name, fromEmail: c.from_email,
     status: c.status, scheduledAt: c.scheduled_at, sentAt: c.sent_at, createdAt: c.created_at,
+    attachments: c.attachments || [],
     stats: {
       total: c.stats_total, sent: c.stats_sent, failed: c.stats_failed,
       opens: c.stats_opens, clicks: c.stats_clicks, unsubscribes: c.stats_unsubscribes
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
     from_name: body.fromName, from_email: body.fromEmail,
     status: body.scheduledAt ? "scheduled" : "draft",
     scheduled_at: body.scheduledAt || null,
+    attachments: body.attachments || [],
   }).select().single();
 
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 400 });
@@ -36,6 +38,7 @@ export async function POST(req: NextRequest) {
     id: campaignData.id, name: campaignData.name, subject: campaignData.subject, html: campaignData.html,
     listId: campaignData.list_id, provider: campaignData.provider, fromName: campaignData.from_name, fromEmail: campaignData.from_email,
     status: campaignData.status, scheduledAt: campaignData.scheduled_at, createdAt: campaignData.created_at,
+    attachments: campaignData.attachments || [],
     stats: { total: 0, sent: 0, failed: 0, opens: 0, clicks: 0, unsubscribes: 0 },
   };
 

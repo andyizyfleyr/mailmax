@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS campaigns (
   stats_failed INTEGER DEFAULT 0 NOT NULL,
   stats_opens INTEGER DEFAULT 0 NOT NULL,
   stats_clicks INTEGER DEFAULT 0 NOT NULL,
-  stats_unsubscribes INTEGER DEFAULT 0 NOT NULL
+  stats_unsubscribes INTEGER DEFAULT 0 NOT NULL,
+  attachments JSONB DEFAULT '[]'::JSONB
 );
 
 -- Table: email_records
