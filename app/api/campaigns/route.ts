@@ -24,16 +24,32 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
+  // Log payload for debug (visible in Vercel logs)
+  console.log("Campaign creation payload:", body);
+
   const { data: campaignData, error: insertError } = await supabase.from("campaigns").insert({
-    name: body.name, subject: body.subject, html: body.html,
-    list_id: body.listId, provider: body.provider,
-    from_name: body.fromName, from_email: body.fromEmail,
+    name: body.name, 
+    subject: body.subject, 
+    html: body.html,
+    list_id: body.listId, 
+    provider: body.provider || "resend",
+    from_name: body.fromName, 
+    from_email: body.fromEmail,
     status: body.scheduledAt ? "scheduled" : "draft",
     scheduled_at: body.scheduledAt || null,
     attachments: body.attachments || [],
+    stats_total: 0,
+    stats_sent: 0,
+    stats_failed: 0,
+    stats_opens: 0,
+    stats_clicks: 0,
+    stats_unsubscribes: 0
   }).select().single();
 
-  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 400 });
+  if (insertError) {
+    console.error("Supabase Insert Error:", insertError);
+    return NextResponse.json({ error: insertError.message }, { status: 400 });
+  }
 
   const campaign = {
     id: campaignData.id, name: campaignData.name, subject: campaignData.subject, html: campaignData.html,
