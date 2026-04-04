@@ -38,6 +38,8 @@ export interface Campaign {
     clicks: number;
     unsubscribes: number;
   };
+  attachments: EmailAttachment[];
+  errorMessage?: string;
 }
 
 export interface EmailRecord {
