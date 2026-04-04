@@ -482,7 +482,7 @@ function ContactsView({ contacts, lists, onRefresh }: {
             <div className="space-y-5">
               <div><label className="label">Adresse Email *</label><input className="input font-mono text-sm" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="email@exemple.com" /></div>
               <div><label className="label">Nom complet</label><input className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Jean Dupont" /></div>
-              <div><label className="label">Tags (séparés par des virgules)</label><input className="input font-mono text-xs" value={newTags} onChange={e => setNewTags(e.target.value)} placeholder="vip, prospect, 2024..." /></div>
+              <div><label className="label">Tags (séparés par des virgules)</label><input className="input font-mono text-xs" value={newTags} onChange={e => setNewTags(e.target.value)} placeholder="vip, prospect, etc..." /></div>
               <div><label className="label">Segment / Liste *</label>
                 <select className="input" value={newList} onChange={e => setNewList(e.target.value)}>
                   <option value="">Sélectionner une cible</option>
@@ -506,7 +506,7 @@ function ContactsView({ contacts, lists, onRefresh }: {
                <p className="text-xs text-[hsl(var(--muted))] font-mono uppercase tracking-widest mt-1">Saisie de données</p>
             </div>
             <div className="space-y-5">
-              <div><label className="label">Nom de la liste *</label><input className="input" value={newListName} onChange={e => setNewListName(e.target.value)} placeholder="Ex: Clients VIP 2024" /></div>
+              <div><label className="label">Nom de la liste *</label><input className="input" value={newListName} onChange={e => setNewListName(e.target.value)} placeholder="Ex: Clients Prioritaires" /></div>
               <div><label className="label">Description (optionnelle)</label><input className="input" value={newListDesc} onChange={e => setNewListDesc(e.target.value)} placeholder="Contexte pour cet audience…" /></div>
               <div className="flex gap-4 pt-4">
                 <button onClick={() => setShowAddList(false)} className="btn btn-ghost flex-1">Annuler</button>
@@ -694,7 +694,7 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                   <div className="grid grid-cols-1 gap-6">
                     <div>
                       <label className="label">Nom interne de la campagne *</label>
-                      <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Newsletter fidélisation - Avril 2024" />
+                      <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Newsletter Fidélisation" />
                       <p className="text-[10px] text-[hsl(var(--dim))] mt-2 italic font-mono">Visible uniquement par vous.</p>
                     </div>
                     <div>
@@ -1208,7 +1208,7 @@ export default function MailerFindApp() {
                 <h2 className="font-display font-black text-2xl text-white tracking-tighter leading-none">{currentNav?.label || "App"}</h2>
                 <div className="flex items-center gap-2 mt-2">
                    <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--electric))] animate-pulse" />
-                   <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest font-bold">Session Active &bull; Jacques D.</p>
+                   <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest font-bold">Session Active</p>
                 </div>
               </div>
             </div>
@@ -1220,11 +1220,11 @@ export default function MailerFindApp() {
                <div className="h-10 w-px bg-[hsl(var(--border))] mx-2" />
                <div className="flex items-center gap-4 pl-2 group cursor-pointer lg:bg-[hsl(var(--s2))] lg:py-2 lg:px-5 lg:rounded-2xl lg:border lg:border-[hsl(var(--border))] lg:hover:border-[hsl(var(--border-glow))] transition-all">
                  <div className="text-right hidden lg:block">
-                   <div className="text-xs font-black text-white tracking-tight leading-none uppercase">Jacques D.</div>
-                   <div className="text-[9px] font-mono text-[hsl(var(--electric))] uppercase mt-1.5 font-bold">Utilisateur Avancé &bull; 9.4k e/m</div>
+                   <div className="text-xs font-black text-white tracking-tight leading-none uppercase">Administrateur</div>
+                   <div className="text-[9px] font-mono text-[hsl(var(--electric))] uppercase mt-1.5 font-bold"></div>
                  </div>
                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[hsl(var(--electric))] to-[hsl(var(--violet))] border-2 border-white/20 flex items-center justify-center text-xs font-black text-white shadow-2xl group-hover:scale-110 transition-transform">
-                   JD
+                   AD
                  </div>
                </div>
             </div>
