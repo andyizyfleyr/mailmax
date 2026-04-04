@@ -615,13 +615,24 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
 
   async function createCampaign() {
     if (!name || !subject || !listId || !fromEmail) return;
-    await fetch("/api/campaigns", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments, scheduledAt: scheduledAt || undefined }),
-    });
-    setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt(""); setAttachments([]);
-    onRefresh();
+    try {
+      const res = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments, scheduledAt: scheduledAt || undefined }),
+      });
+      const campaign = await res.json();
+      
+      setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt(""); setAttachments([]);
+      onRefresh();
+
+      // IF NOT SCHEDULED -> START IMMEDIATELY
+      if (!scheduledAt && campaign.id) {
+        sendCampaign(campaign.id);
+      }
+    } catch (err) {
+      console.error("Failed to create campaign:", err);
+    }
   }
 
   async function sendCampaign(id: string) {
