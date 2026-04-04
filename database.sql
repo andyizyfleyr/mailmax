@@ -90,6 +90,7 @@ CREATE TABLE inbound_emails (
   subject TEXT,
   html TEXT,
   text TEXT,
+  attachments JSONB DEFAULT '[]'::JSONB,
   status TEXT DEFAULT 'unread' NOT NULL, -- 'unread', 'read', 'archived'
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );

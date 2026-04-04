@@ -103,4 +103,5 @@ export interface InboundEmail {
   text?: string;
   status: "unread" | "read" | "archived";
   timestamp: string;
+  attachments?: EmailAttachment[];
 }
