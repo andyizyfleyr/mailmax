@@ -621,14 +621,19 @@ function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments, scheduledAt: scheduledAt || undefined }),
       });
-      const campaign = await res.json();
+      
+      const data = await res.json();
+      if (!res.ok) {
+        alert("Erreur lors de la création : " + (data.error || "Erreur inconnue"));
+        return;
+      }
       
       setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt(""); setAttachments([]);
       onRefresh();
 
       // IF NOT SCHEDULED -> START IMMEDIATELY
-      if (!scheduledAt && campaign.id) {
-        sendCampaign(campaign.id);
+      if (!scheduledAt && data.id) {
+        sendCampaign(data.id);
       }
     } catch (err) {
       console.error("Failed to create campaign:", err);
