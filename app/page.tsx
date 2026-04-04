@@ -1221,7 +1221,7 @@ export default function MailerFindApp() {
                <div className="flex items-center gap-4 pl-2 group cursor-pointer lg:bg-[hsl(var(--s2))] lg:py-2 lg:px-5 lg:rounded-2xl lg:border lg:border-[hsl(var(--border))] lg:hover:border-[hsl(var(--border-glow))] transition-all">
                  <div className="text-right hidden lg:block">
                    <div className="text-xs font-black text-white tracking-tight leading-none uppercase">Jacques D.</div>
-                   <div className="text-[9px] font-mono text-[hsl(var(--electric))] uppercase mt-1.5 font-bold">Power User &bull; 9.4k e/mo</div>
+                   <div className="text-[9px] font-mono text-[hsl(var(--electric))] uppercase mt-1.5 font-bold">Utilisateur Avancé &bull; 9.4k e/m</div>
                  </div>
                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[hsl(var(--electric))] to-[hsl(var(--violet))] border-2 border-white/20 flex items-center justify-center text-xs font-black text-white shadow-2xl group-hover:scale-110 transition-transform">
                    JD
@@ -1243,12 +1243,6 @@ export default function MailerFindApp() {
           </div>
         </div>
 
-        {/* INDUSTRIAL FOOTER */}
-        <footer className="px-10 py-12 border-t border-[hsl(var(--border))] bg-gradient-to-b from-transparent to-[hsl(var(--s1)/0.2)] mt-auto">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <p className="text-[10px] font-mono text-[hsl(var(--dim))] uppercase tracking-widest">&copy; 2024 MailMax &bull; Tous droits réservés.</p>
-          </div>
-        </footer>
       </main>
     </div>
   );
