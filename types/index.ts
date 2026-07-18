@@ -87,14 +87,12 @@ export interface BulkSendPayload {
 }
 
 export interface DashboardStats {
+  totalContacts: number;
+  totalLists: number;
+  totalCampaigns: number;
   totalSent: number;
-  totalOpens: number;
-  totalClicks: number;
-  totalUnsubs: number;
-  openRate: number;
-  clickRate: number;
-  recentActivity: { date: string; sent: number; opens: number; clicks: number }[];
-  topCampaigns: { name: string; opens: number; clicks: number }[];
+  recentActivity: { date: string; sent: number }[];
+  topCampaigns: { name: string; sent: number }[];
 }
 
 export interface InboundEmail {
