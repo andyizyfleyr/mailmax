@@ -247,6 +247,8 @@ select.input {
 .rich-editor strong { color: #fff; font-weight: 700; }
 .rich-editor a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 3px; }
 .rich-editor ul { padding-left: 1.5rem; margin-bottom: 0.875rem; }
+.rich-editor img { display: inline-block; margin: 4px; vertical-align: top; }
+.rich-editor img:hover { filter: brightness(0.85); }
 
 .table-row {
   display: grid;

@@ -49,7 +49,8 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
     const reader = new FileReader();
     reader.onload = () => {
       const url = reader.result as string;
-      execCmd("insertImage", url);
+      const imgHtml = `<img src="${url}" style="width:150px;height:150px;object-fit:cover;border-radius:8px;margin:4px;cursor:pointer;display:inline-block" onclick="var w=prompt('Largeur en px (150):',this.width);if(w&&!isNaN(w)&&w>0){this.style.width=w+'px';this.style.height=w+'px'}" />`;
+      execCmd("insertHTML", imgHtml);
     };
     reader.readAsDataURL(file);
     e.target.value = "";
