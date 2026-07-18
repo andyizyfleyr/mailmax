@@ -81,7 +81,13 @@ export function ContactsView({ contacts, lists, onRefresh }: {
       setSelected(prev => prev.filter(id => !paginated.some(c => c.id === id)));
     } else {
       const pageIds = paginated.map(c => c.id);
-      setSelected(prev => [...new Set([...prev, ...pageIds])]);
+      setSelected(prev => {
+        const next = [...prev];
+        for (const id of pageIds) {
+          if (!next.includes(id)) next.push(id);
+        }
+        return next;
+      });
     }
   }
 
