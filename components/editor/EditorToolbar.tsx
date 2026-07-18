@@ -1,6 +1,6 @@
-import { Bold, Italic, List, Heading2, Link, AlignLeft } from "lucide-react";
+import { Bold, Italic, List, Heading2, Link, AlignLeft, Image } from "lucide-react";
 
-export function EditorToolbar({ exec }: { exec: (cmd: string, val?: string) => void }) {
+export function EditorToolbar({ exec, onImage }: { exec: (cmd: string, val?: string) => void; onImage?: () => void }) {
   const tools = [
     { icon: <Bold size={14} />, cmd: "bold", title: "Gras" },
     { icon: <Italic size={14} />, cmd: "italic", title: "Italique" },
@@ -24,6 +24,10 @@ export function EditorToolbar({ exec }: { exec: (cmd: string, val?: string) => v
           {t.icon}
         </button>
       ))}
+      <button type="button" title="Image" onClick={onImage}
+        className="p-1.5 rounded-lg text-[hsl(var(--dim))] hover:text-white hover:bg-[hsl(var(--s2))] transition-colors">
+        <Image size={14} />
+      </button>
       <div className="w-px h-4 mx-1 bg-[hsl(var(--border))]" />
       {["#3b82f6", "#ef4444", "#f59e0b", "#10b981"].map(c => (
         <button key={c} type="button" title={c} onClick={() => exec("foreColor", c)}

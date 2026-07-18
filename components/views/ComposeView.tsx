@@ -18,6 +18,7 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [msg, setMsg] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: useCallback((files: File[]) => {
@@ -36,6 +37,22 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
   function execCmd(cmd: string, val?: string) {
     document.execCommand(cmd, false, val);
     if (editorRef.current) setHtml(editorRef.current.innerHTML);
+  }
+
+  function handleImageClick() {
+    imageInputRef.current?.click();
+  }
+
+  function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result as string;
+      execCmd("insertImage", url);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
 
   async function handleSend() {
@@ -111,7 +128,8 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
               <div className="space-y-2">
                 <label className="label">Message</label>
                 <div className="border border-[hsl(var(--border))] rounded-lg overflow-hidden">
-                  <EditorToolbar exec={execCmd} />
+                  <EditorToolbar exec={execCmd} onImage={handleImageClick} />
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
                   <div ref={editorRef} contentEditable onInput={() => { if (editorRef.current) setHtml(editorRef.current.innerHTML); }}
                     data-placeholder="Commencez à écrire..." className="rich-editor min-h-[320px] p-6" suppressContentEditableWarning />
                 </div>

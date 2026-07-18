@@ -30,6 +30,7 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   const editorRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: useCallback((files: File[]) => {
@@ -83,6 +84,22 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   function execCmd(cmd: string, val?: string) {
     document.execCommand(cmd, false, val);
     if (editorRef.current) setHtml(editorRef.current.innerHTML);
+  }
+
+  function handleImageClick() {
+    imageInputRef.current?.click();
+  }
+
+  function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result as string;
+      execCmd("insertImage", url);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
 
   const statusVariant: Record<string, "primary" | "success" | "danger" | "warning" | "info" | "muted"> = {
@@ -237,7 +254,8 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                   <div className="space-y-2">
                     <label className="label">Contenu</label>
                     <div className="border border-[hsl(var(--border))] rounded-lg overflow-hidden">
-                      <EditorToolbar exec={execCmd} />
+                      <EditorToolbar exec={execCmd} onImage={handleImageClick} />
+                      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
                       <div {...getRootProps()} className="relative">
                         <input {...getInputProps()} />
                         <div ref={editorRef} contentEditable className="rich-editor min-h-[240px] p-5" onInput={e => setHtml(e.currentTarget.innerHTML)}
