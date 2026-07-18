@@ -5,8 +5,8 @@ export async function GET() {
   const [contactsRes, listsRes, campaignsRes, recordsRes] = await Promise.all([
     supabase.from("contacts").select("id", { count: "exact", head: true }),
     supabase.from("lists").select("id", { count: "exact", head: true }),
-    supabase.from("campaigns").select("name, stats_sent").order("created_at", { ascending: false }).limit(5),
-    supabase.from("email_records").select("status, timestamp"),
+    supabase.from("campaigns").select("name, stats_sent"),
+    supabase.from("email_records").select("status, campaign_id, timestamp"),
   ]);
 
   if (contactsRes.error) console.error("contacts error:", contactsRes.error);
@@ -16,10 +16,16 @@ export async function GET() {
 
   const totalContacts = contactsRes.count ?? 0;
   const totalLists = listsRes.count ?? 0;
-  const totalCampaigns = campaignsRes.data?.length ?? 0;
+
+  const campaigns = campaignsRes.data || [];
+  const totalCampaigns = campaigns.length;
+
+  const campaignSent = campaigns.reduce((sum: number, c: any) => sum + (c.stats_sent || 0), 0);
 
   const records = recordsRes.data || [];
-  const totalSent = records.filter((r: any) => r.status === "sent").length;
+  const composeSent = records.filter((r: any) => r.status === "sent" && !r.campaign_id).length;
+
+  const totalSent = campaignSent + composeSent;
 
   const recentActivity = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
@@ -35,10 +41,9 @@ export async function GET() {
     };
   });
 
-  const campaigns = campaignsRes.data || [];
   const topCampaigns = campaigns.map((c: any) => ({
     name: c.name,
-    sent: c.stats_sent,
+    sent: c.stats_sent || 0,
   }));
 
   return NextResponse.json({
