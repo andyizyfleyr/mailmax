@@ -34,7 +34,7 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
         <p className="text-sm text-[hsl(var(--muted))] mt-0.5">Vue d'ensemble de votre activité</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <StatCard value={fmt(stats.totalContacts)} label="Contacts" icon={<Users size={18} />} color="var(--primary)" />
         <StatCard value={fmt(stats.totalLists)} label="Listes" icon={<Layers size={18} />} color="var(--info)" />
         <StatCard value={fmt(stats.totalCampaigns)} label="Campagnes" icon={<Megaphone size={18} />} color="var(--success)" />
