@@ -94,10 +94,21 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string;
-      const imgHtml = `<img src="${url}" style="width:150px;height:150px;object-fit:cover;border-radius:8px;margin:4px;cursor:pointer;display:inline-block" onclick="var w=prompt('Largeur en px (150):',this.width);if(w&&!isNaN(w)&&w>0){this.style.width=w+'px';this.style.height=w+'px'}" />`;
-      execCmd("insertHTML", imgHtml);
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(",")[1];
+      const mime = file.type;
+      try {
+        const res = await fetch("/api/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ base64, mime }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          const imgHtml = `<img src="${data.url}" style="width:150px;height:150px;object-fit:cover;border-radius:8px;margin:4px;cursor:pointer;display:inline-block" onclick="var w=prompt('Largeur en px (150):',this.width);if(w&&!isNaN(w)&&w>0){this.style.width=w+'px';this.style.height=w+'px'}" />`;
+          execCmd("insertHTML", imgHtml);
+        }
+      } catch {}
     };
     reader.readAsDataURL(file);
     e.target.value = "";
