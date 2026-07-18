@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MailerFind — Email Studio",
+  title: "MailMax — Email Platform",
   description: "Multi-provider email platform",
 };
 

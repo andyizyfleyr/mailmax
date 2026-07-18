@@ -1,4 +1,7 @@
+"use client";
+
 import { LayoutDashboard, Send, Users, Megaphone, History, Inbox, Zap, ChevronRight, AlignLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export type View = "dashboard" | "compose" | "contacts" | "campaigns" | "history" | "inbox";
 
@@ -11,12 +14,13 @@ const NAV = [
   { id: "history" as View, label: "Historique", icon: <History size={20} /> },
 ];
 
-export function Sidebar({ view, onNavigate, collapsed, onToggle }: {
+export function Sidebar({ view, collapsed, onToggle }: {
   view: View;
-  onNavigate: (v: View) => void;
   collapsed: boolean;
   onToggle: () => void;
 }) {
+  const router = useRouter();
+
   return (
     <aside className={`fixed inset-y-0 left-0 flex flex-col z-50 border-r border-[hsl(var(--border))] bg-[hsl(var(--bg))] transition-all duration-200 ${collapsed ? "w-[68px]" : "w-60"}`}>
       <div className={`flex items-center gap-3 p-5 border-b border-[hsl(var(--border))] ${collapsed ? "justify-center px-0" : ""}`}>
@@ -33,8 +37,8 @@ export function Sidebar({ view, onNavigate, collapsed, onToggle }: {
 
       <nav className="flex-1 px-2 py-4 space-y-1">
         {NAV.map(n => (
-          <button key={n.id} onClick={() => { onNavigate(n.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`nav-item w-full ${collapsed ? "justify-center px-0 py-3" : ""} ${view === n.id ? "active" : ""}`}>
+          <button key={n.id} onClick={() => { router.push(`/${n.id}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            className={`nav-item w-full ${collapsed ? "justify-center px-0 py-3 group" : ""} ${view === n.id ? "active" : ""}`}>
             <span className={view === n.id ? "" : "opacity-70"}>{n.icon}</span>
             {!collapsed && <span>{n.label}</span>}
             {collapsed && (
