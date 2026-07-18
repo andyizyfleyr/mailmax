@@ -1,17 +1,15 @@
 "use client";
 
-import { LayoutDashboard, Send, Users, Megaphone, History, Inbox, Zap, ChevronRight, AlignLeft } from "lucide-react";
+import { LayoutDashboard, Send, Users, Megaphone, Zap, ChevronRight, AlignLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export type View = "dashboard" | "compose" | "contacts" | "campaigns" | "history" | "inbox";
+export type View = "dashboard" | "compose" | "contacts" | "campaigns";
 
 const NAV = [
   { id: "dashboard" as View, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-  { id: "inbox" as View, label: "Inbox", icon: <Inbox size={20} /> },
   { id: "compose" as View, label: "Compose", icon: <Send size={20} /> },
   { id: "contacts" as View, label: "Contacts", icon: <Users size={20} /> },
   { id: "campaigns" as View, label: "Campagnes", icon: <Megaphone size={20} /> },
-  { id: "history" as View, label: "Historique", icon: <History size={20} /> },
 ];
 
 export function Sidebar({ view, collapsed, onToggle }: {

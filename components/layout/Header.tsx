@@ -4,11 +4,9 @@ import { View } from "./Sidebar";
 
 const LABELS: Record<View, string> = {
   dashboard: "Dashboard",
-  inbox: "Inbox",
   compose: "Compose",
   contacts: "Contacts",
   campaigns: "Campagnes",
-  history: "Historique",
 };
 
 export function Header({ view, scrolled }: {

@@ -7,11 +7,9 @@ import { Header } from "@/components/layout/Header";
 
 const VIEW_MAP: Record<string, View> = {
   dashboard: "dashboard",
-  inbox: "inbox",
   compose: "compose",
   contacts: "contacts",
   campaigns: "campaigns",
-  history: "history",
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
