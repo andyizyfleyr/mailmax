@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Plus, Trash2, Play, Loader2, CheckCircle, XCircle, RefreshCw, Send, Eye, MousePointer, UserMinus, Megaphone, X, Paperclip, Upload, Zap } from "lucide-react";
+import { Plus, Trash2, Play, Loader2, CheckCircle, XCircle, RefreshCw, Send, Megaphone, X, Paperclip, Upload, Zap } from "lucide-react";
 import { EmailProvider, Campaign, ContactList, Contact, EmailAttachment } from "@/types";
 import { Badge, Button, Card, Modal, ConfirmDialog, AlertDialog } from "@/components/ui";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
@@ -126,12 +126,9 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                 </button>
               </div>
 
-              <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { label: "Envoyés", val: c.stats.sent, icon: <Send size={13} />, color: "var(--primary)" },
-                  { label: "Ouverts", val: c.stats.opens, icon: <Eye size={13} />, color: "var(--info)" },
-                  { label: "Clics", val: c.stats.clicks, icon: <MousePointer size={13} />, color: "var(--success)" },
-                  { label: "Désab.", val: c.stats.unsubscribes, icon: <UserMinus size={13} />, color: "var(--danger)" },
                 ].map(s => (
                   <div key={s.label}>
                     <div className="flex items-center gap-1 text-[10px] font-medium text-[hsl(var(--dim))] mb-1">
