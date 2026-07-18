@@ -8,6 +8,17 @@ export async function GET() {
     supabase.from("campaigns").select("name, stats_opens, stats_clicks").order("created_at", { ascending: false }).limit(5),
   ]);
 
+  if (recordsRes.error) console.error("email_records error:", recordsRes.error);
+  if (eventsRes.error) console.error("analytics_events error:", eventsRes.error);
+  if (campaignsRes.error) console.error("campaigns error:", campaignsRes.error);
+
+  if (recordsRes.error || eventsRes.error) {
+    return NextResponse.json({
+      error: "Erreur de chargement des données",
+      details: recordsRes.error?.message || eventsRes.error?.message,
+    }, { status: 500 });
+  }
+
   const records = recordsRes.data || [];
   const events = eventsRes.data || [];
   const campaigns = campaignsRes.data || [];
