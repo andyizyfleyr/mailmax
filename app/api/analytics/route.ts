@@ -54,5 +54,5 @@ export async function GET() {
     clicks: c.stats_clicks,
   }));
 
-  return NextResponse.json({ totalSent, totalOpens, totalClicks, totalUnsubs, recentActivity, topCampaigns });
+  return NextResponse.json({ totalSent, totalOpens, totalClicks, totalUnsubs, openRate, clickRate, recentActivity, topCampaigns });
 }

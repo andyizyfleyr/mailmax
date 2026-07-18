@@ -113,20 +113,24 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
           </Card>
 
           <div className="grid grid-cols-1 gap-4">
-            {[
-              { icon: <TrendingUp size={16} />, title: "Taux d'ouverture", value: "Objectif: 30%+", color: "var(--primary)", desc: "Objets courts et personnalisés." },
-              { icon: <MousePointer size={16} />, title: "Taux de clic", value: "Objectif: 7%+", color: "var(--success)", desc: "Un seul CTA visible." },
-            ].map((t, i) => (
-              <Card key={i} className="p-4 flex items-start gap-4">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `hsl(${t.color} / 0.1)`, color: `hsl(${t.color})` }}>
-                  {t.icon}
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-[hsl(var(--muted))]">{t.title}</div>
-                  <div className="text-sm font-bold text-white">{t.value}</div>
-                </div>
-              </Card>
-            ))}
+            <Card className="p-4 flex items-start gap-4">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }}>
+                <TrendingUp size={16} />
+              </div>
+              <div>
+                <div className="text-xs font-medium text-[hsl(var(--muted))]">Taux d'ouverture</div>
+                <div className="text-sm font-bold text-white">{stats.openRate}%</div>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-start gap-4">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "hsl(var(--success) / 0.1)", color: "hsl(var(--success))" }}>
+                <MousePointer size={16} />
+              </div>
+              <div>
+                <div className="text-xs font-medium text-[hsl(var(--muted))]">Taux de clic</div>
+                <div className="text-sm font-bold text-white">{stats.clickRate}%</div>
+              </div>
+            </Card>
           </div>
         </div>
       </div>

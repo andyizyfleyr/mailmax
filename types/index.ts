@@ -91,6 +91,8 @@ export interface DashboardStats {
   totalOpens: number;
   totalClicks: number;
   totalUnsubs: number;
+  openRate: number;
+  clickRate: number;
   recentActivity: { date: string; sent: number; opens: number; clicks: number }[];
   topCampaigns: { name: string; opens: number; clicks: number }[];
 }
