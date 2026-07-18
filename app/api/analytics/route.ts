@@ -53,6 +53,15 @@ export async function GET() {
     return { date: label, sent: cumulative };
   });
 
+  if (activity.length === 0) {
+    activity.push({ date: "Aujourd'hui", sent: 0 });
+  } else if (activity[0].sent > 0) {
+    const firstDate = new Date(allDays[0][0] + "T00:00:00Z");
+    firstDate.setDate(firstDate.getDate() - 1);
+    const label = firstDate.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+    activity.unshift({ date: label, sent: 0 });
+  }
+
   const topCampaigns = campaigns.map((c: any) => ({
     name: c.name,
     sent: c.stats_sent || 0,

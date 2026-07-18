@@ -42,7 +42,7 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
             </div>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.recentActivity.length > 0 ? stats.recentActivity : [{ date: "Aucune", sent: 0 }]} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                <AreaChart data={stats.recentActivity} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#4f8cff" stopOpacity={0.25} />
@@ -54,9 +54,9 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{ background: "hsl(var(--s1))", border: "1px solid hsl(var(--border))", borderRadius: "10px", fontSize: "13px" }}
-                    cursor={{ stroke: "hsl(var(--primary) / 0.3)", strokeWidth: 1 }}
+                    cursor={{ stroke: "#4f8cff", strokeWidth: 1 }}
                   />
-                  <Area type="linear" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés" />
+                  <Area type="monotone" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés" isAnimationActive={true} animationDuration={800} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
