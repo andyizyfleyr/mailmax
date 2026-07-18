@@ -27,7 +27,6 @@ export let campaigns: Campaign[] = [
     status: "sent",
     sentAt: new Date(Date.now() - 86400000 * 3).toISOString(),
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    attachments: [],
     stats: { total: 2, sent: 2, failed: 0, opens: 1, clicks: 0, unsubscribes: 0 },
   },
 ];
