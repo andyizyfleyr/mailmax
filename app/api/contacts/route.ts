@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Limite de 5000 contacts par import CSV." }, { status: 400 });
     }
 
-    // Batch insert in chunks of 200 to avoid Supabase limits
-    const chunkSize = 200;
+    // Batch insert in chunks of 1000 to avoid Supabase limits and Vercel timeout
+    const chunkSize = 1000;
     let total = 0;
     let lastError: string | null = null;
     for (let i = 0; i < rowsToInsert.length; i += chunkSize) {

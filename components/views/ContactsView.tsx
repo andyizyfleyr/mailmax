@@ -99,10 +99,11 @@ export function ContactsView({ contacts, lists, onRefresh }: {
       const parts = line.split(",");
       return { email: parts[0]?.trim(), name: parts[1]?.trim() };
     }).filter(r => r.email);
-    if (!filterList || filterList === "all") { setAlertImport(true); return; }
+    if (!filterList || filterList === "all") { setAlertImportMsg("Sélectionnez une liste spécifique avant d'importer un fichier CSV."); setAlertImport(true); return; }
     const res = await fetch("/api/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "import", rows, listId: filterList }) });
     const data = await res.json();
     if (data.error) { setAlertImportMsg(data.error); setAlertImport(true); }
+    else if (data.imported) { setAlertImportMsg(`${data.imported} contacts importés.`); setAlertImport(true); }
     onRefresh();
   }
 
