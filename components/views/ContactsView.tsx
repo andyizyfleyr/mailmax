@@ -94,7 +94,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
         </div>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+      <div className="flex flex-wrap gap-3 pb-4">
         <Card className={`p-5 min-w-[180px] cursor-pointer transition-all ${filterList === "all" ? "ring-1 ring-[hsl(var(--primary))] border-transparent" : "hover:border-[hsl(var(--primary)/0.3)]"}`}
           onClick={() => setFilterList("all")}>
           <div className="text-xs font-medium text-[hsl(var(--muted))] mb-1">Total</div>
