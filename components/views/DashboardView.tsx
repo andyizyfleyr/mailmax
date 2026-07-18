@@ -37,26 +37,28 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h3 className="font-display font-bold text-base text-white">Activité</h3>
-                <p className="text-xs text-[hsl(var(--muted))] mt-0.5">Cumul des emails envoyés</p>
+                <p className="text-xs text-[hsl(var(--muted))] mt-0.5">Emails envoyés par jour</p>
               </div>
             </div>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.recentActivity} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                <AreaChart data={stats.recentActivity} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f8cff" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#4f8cff" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#4f8cff" stopOpacity={0.4} />
+                      <stop offset="40%" stopColor="#4f8cff" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="#4f8cff" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.5} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 11 }} dy={8} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 11 }} dy={8} interval="preserveStartEnd" />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 11 }} width={30} />
                   <Tooltip
                     contentStyle={{ background: "hsl(var(--s1))", border: "1px solid hsl(var(--border))", borderRadius: "10px", fontSize: "13px" }}
-                    cursor={{ stroke: "#4f8cff", strokeWidth: 1 }}
+                    cursor={{ stroke: "#4f8cff", strokeWidth: 1, strokeDasharray: "4 4" }}
                   />
-                  <Area type="monotone" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés" isAnimationActive={true} animationDuration={800} />
+                  <Area type="monotone" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés"
+                    isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

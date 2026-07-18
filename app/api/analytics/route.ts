@@ -45,21 +45,14 @@ export async function GET() {
 
   const allDays = Array.from(dailyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
 
-  let cumulative = 0;
   const activity = allDays.map(([dateStr, count]) => {
-    cumulative += count;
     const d = new Date(dateStr + "T00:00:00Z");
     const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
-    return { date: label, sent: cumulative };
+    return { date: label, sent: count };
   });
 
   if (activity.length === 0) {
     activity.push({ date: "Aujourd'hui", sent: 0 });
-  } else if (activity[0].sent > 0) {
-    const firstDate = new Date(allDays[0][0] + "T00:00:00Z");
-    firstDate.setDate(firstDate.getDate() - 1);
-    const label = firstDate.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
-    activity.unshift({ date: label, sent: 0 });
   }
 
   const topCampaigns = campaigns.map((c: any) => ({
