@@ -106,8 +106,7 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
     <div className="pb-20 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h2 className="font-display font-bold text-xl text-white">Campagnes</h2>
-          <p className="text-sm text-[hsl(var(--muted))] mt-0.5">{campaigns.length} campagne{campaigns.length > 1 ? "s" : ""}</p>
+          <p className="text-sm text-[hsl(var(--muted))]">{campaigns.length} campagne{campaigns.length > 1 ? "s" : ""}</p>
         </div>
         <Button variant="primary" onClick={() => { setStep(1); setShowCreate(true); }}>
           <Plus size={16} /> Nouvelle campagne

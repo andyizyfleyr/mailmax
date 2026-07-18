@@ -28,11 +28,7 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
   const maxSent = Math.max(...stats.recentActivity.map(d => d.sent), 1);
 
   return (
-    <div className="pb-12 space-y-8">
-      <div>
-        <h2 className="font-display font-bold text-xl text-white">Dashboard</h2>
-        <p className="text-sm text-[hsl(var(--muted))] mt-0.5">Vue d'ensemble de votre activité</p>
-      </div>
+    <div className="pb-12 space-y-6">
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <StatCard value={fmt(stats.totalContacts)} label="Contacts" icon={<Users size={18} />} color="var(--primary)" />

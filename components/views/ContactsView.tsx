@@ -128,8 +128,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
     <div className="pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h2 className="font-display font-bold text-xl text-white">Contacts</h2>
-          <p className="text-sm text-[hsl(var(--muted))] mt-0.5">Gérez votre audience</p>
+          <p className="text-sm text-[hsl(var(--muted))]">Gérez votre audience</p>
         </div>
         <div className="flex items-center gap-2">
           <label className="btn btn-ghost text-xs cursor-pointer">
