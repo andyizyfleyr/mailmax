@@ -32,6 +32,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
   const [alertImport, setAlertImport] = useState(false);
+  const [alertImportMsg, setAlertImportMsg] = useState("Sélectionnez une liste spécifique avant d'importer un fichier CSV.");
   const [newListName, setNewListName] = useState(""); const [newListDesc, setNewListDesc] = useState("");
 
   const filtered = contacts.filter(c => {
@@ -99,7 +100,9 @@ export function ContactsView({ contacts, lists, onRefresh }: {
       return { email: parts[0]?.trim(), name: parts[1]?.trim() };
     }).filter(r => r.email);
     if (!filterList || filterList === "all") { setAlertImport(true); return; }
-    await fetch("/api/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "import", rows, listId: filterList }) });
+    const res = await fetch("/api/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "import", rows, listId: filterList }) });
+    const data = await res.json();
+    if (data.error) { setAlertImportMsg(data.error); setAlertImport(true); }
     onRefresh();
   }
 
@@ -295,7 +298,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
 
       <ConfirmDialog open={!!confirmDeleteId} title="Supprimer le contact" description="Êtes-vous sûr de vouloir supprimer ce contact ? Cette action est irréversible." confirmLabel="Supprimer" onConfirm={doDeleteContact} onCancel={() => setConfirmDeleteId(null)} />
       <ConfirmDialog open={confirmDeleteSelected} title="Supprimer les contacts" description={`Êtes-vous sûr de vouloir supprimer ces ${selected.length} contacts ? Cette action est irréversible.`} confirmLabel="Supprimer" onConfirm={doDeleteSelected} onCancel={() => setConfirmDeleteSelected(false)} />
-      <AlertDialog open={alertImport} title="Impossible d'importer" description="Sélectionnez une liste spécifique avant d'importer un fichier CSV." onClose={() => setAlertImport(false)} />
+      <AlertDialog open={alertImport} title="Impossible d'importer" description={alertImportMsg} onClose={() => setAlertImport(false)} />
 
       {showAddList && (
         <Modal onClose={() => setShowAddList(false)} maxWidth={440}>

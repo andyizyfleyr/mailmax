@@ -57,11 +57,26 @@ export async function POST(req: NextRequest) {
       name: row.name || row.email,
       list_id: body.listId,
     }));
-    const { data: inserted, error } = await supabase.from("contacts").insert(rowsToInsert).select();
-    
-    // Si certains ont échoué parce qu'ils existaient déjà, on l'ignore silencieusement pour le moment
-    const count = error ? 0 : (inserted?.length || 0);
-    return NextResponse.json({ imported: count });
+
+    if (rowsToInsert.length > 5000) {
+      return NextResponse.json({ error: "Limite de 5000 contacts par import CSV." }, { status: 400 });
+    }
+
+    // Batch insert in chunks of 200 to avoid Supabase limits
+    const chunkSize = 200;
+    let total = 0;
+    let lastError: string | null = null;
+    for (let i = 0; i < rowsToInsert.length; i += chunkSize) {
+      const chunk = rowsToInsert.slice(i, i + chunkSize);
+      const { data: inserted, error } = await supabase.from("contacts").insert(chunk).select();
+      if (error) {
+        lastError = error.message;
+        break;
+      }
+      total += inserted?.length || 0;
+    }
+
+    return NextResponse.json({ imported: total, error: lastError });
   }
 
   return NextResponse.json({ error: "Unknown type" }, { status: 400 });
