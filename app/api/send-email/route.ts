@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
   // Immediate
   try {
-    const providerId = await sendViaProvider({ provider, from, fromName, to, subject, html: trackedHtml, attachments });
+    const providerId = await sendViaProvider({ provider, from, fromName, to, subject, html: trackedHtml });
     await supabase.from("email_records").insert({ id, provider, from, to, subject, provider_id: providerId, status: "sent" });
     return NextResponse.json({ success: true, id });
   } catch (err: unknown) {
