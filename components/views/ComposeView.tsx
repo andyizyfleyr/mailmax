@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Paperclip, Upload, X, Calendar, Loader2, Zap, Send } from "lucide-react";
+import { Paperclip, Upload, X, Loader2, Send } from "lucide-react";
 import { EmailProvider, ContactList, EmailAttachment } from "@/types";
 import { Card, Button } from "@/components/ui";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
@@ -14,7 +14,6 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
   const [subject, setSubject] = useState("");
   const [html, setHtml] = useState("");
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
-  const [scheduledAt, setScheduledAt] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [msg, setMsg] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
@@ -45,13 +44,13 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
       const res = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, from, to, subject, html, attachments, scheduledAt: scheduledAt || undefined }),
+        body: JSON.stringify({ provider, from, to, subject, html, attachments }),
       });
       const data = await res.json();
       if (data.success) {
         setStatus("success");
-        setMsg(data.scheduled ? "Envoi programmé avec succès." : "Email envoyé avec succès !");
-        setTo(""); setSubject(""); setHtml(""); setAttachments([]); setScheduledAt("");
+        setMsg("Email envoyé avec succès !");
+        setTo(""); setSubject(""); setHtml(""); setAttachments([]);
         if (editorRef.current) editorRef.current.innerHTML = "";
         onSent();
       } else { setStatus("error"); setMsg(data.error || "Une erreur est survenue."); }
@@ -139,13 +138,8 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
               )}
             </div>
 
-            <div className="space-y-2 pt-3 border-t border-[hsl(var(--border))]">
-              <label className="label flex items-center gap-2"><Calendar size={13} /> Planification</label>
-              <input type="datetime-local" className="input !text-xs" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} style={{ colorScheme: "dark" }} />
-            </div>
-
             <Button variant="primary" className="w-full justify-center py-3" disabled={status === "loading"} onClick={handleSend}>
-              {status === "loading" ? <><Loader2 size={16} className="spin" /> Envoi...</> : scheduledAt ? <><Calendar size={16} /> Planifier</> : <><Send size={16} /> Envoyer</>}
+              {status === "loading" ? <><Loader2 size={16} className="spin" /> Envoi...</> : <><Send size={16} /> Envoyer</>}
             </Button>
 
             {status !== "idle" && (

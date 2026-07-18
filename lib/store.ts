@@ -38,9 +38,6 @@ export let emailRecords: EmailRecord[] = [];
 // ---- ANALYTICS ----
 export let analyticsEvents: AnalyticsEvent[] = [];
 
-// ---- SCHEDULED JOBS ----
-export const scheduledJobs = new Map<string, ReturnType<typeof setTimeout>>();
-
 // ---- UNSUBSCRIBE TOKENS ----
 export const unsubTokens = new Map<string, string>(); // token → email
 

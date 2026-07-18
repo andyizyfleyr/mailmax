@@ -26,8 +26,7 @@ export interface Campaign {
   provider: EmailProvider;
   fromName: string;
   fromEmail: string;
-  status: "draft" | "scheduled" | "sending" | "sent" | "failed";
-  scheduledAt?: string;
+  status: "draft" | "sending" | "sent" | "failed";
   sentAt?: string;
   createdAt: string;
   stats: {
@@ -49,12 +48,11 @@ export interface EmailRecord {
   from: string;
   to: string;
   subject: string;
-  status: "sent" | "failed" | "scheduled";
+  status: "sent" | "failed";
   error?: string;
   opens: number;
   clicks: number;
   timestamp: string;
-  scheduledAt?: string;
 }
 
 export interface AnalyticsEvent {
@@ -79,7 +77,6 @@ export interface SendPayload {
   subject: string;
   html: string;
   attachments?: EmailAttachment[];
-  scheduledAt?: string;
 }
 
 export interface BulkSendPayload {

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Plus, Trash2, Play, Loader2, CheckCircle, XCircle, RefreshCw, Send, Eye, MousePointer, UserMinus, Megaphone, X, Paperclip, Calendar, Upload, Zap } from "lucide-react";
+import { Plus, Trash2, Play, Loader2, CheckCircle, XCircle, RefreshCw, Send, Eye, MousePointer, UserMinus, Megaphone, X, Paperclip, Upload, Zap } from "lucide-react";
 import { EmailProvider, Campaign, ContactList, Contact, EmailAttachment } from "@/types";
 import { Badge, Button, Card, Modal, ConfirmDialog, AlertDialog } from "@/components/ui";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
@@ -28,7 +28,6 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   const [provider] = useState<EmailProvider>("resend");
   const [fromName, setFromName] = useState("CrediWize");
   const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
-  const [scheduledAt, setScheduledAt] = useState("");
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -59,13 +58,13 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments, scheduledAt: scheduledAt || undefined }),
+        body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments }),
       });
       const data = await res.json();
       if (!res.ok) { setAlertMsg("Erreur : " + (data.error || "Échec de création")); return; }
-      setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt(""); setAttachments([]);
+      setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setAttachments([]);
       onRefresh();
-      if (!scheduledAt && data.id) sendCampaign(data.id);
+      if (data.id) sendCampaign(data.id);
     } catch { setAlertMsg("Erreur de connexion au serveur."); }
   }
 
@@ -87,7 +86,7 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   }
 
   const statusVariant: Record<string, "primary" | "success" | "danger" | "warning" | "info" | "muted"> = {
-    draft: "muted", scheduled: "info", sending: "warning", sent: "success", failed: "danger",
+    draft: "muted", sending: "warning", sent: "success", failed: "danger",
   };
 
   return (
@@ -233,10 +232,6 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                       ))}
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="label">Planification (optionnelle)</label>
-                    <input type="datetime-local" className="input" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} style={{ colorScheme: "dark" }} />
-                  </div>
                 </div>
               )}
 
@@ -288,7 +283,7 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                 <Button variant="primary" className="px-8" onClick={() => setStep(step + 1)}>Continuer</Button>
               ) : (
                 <Button variant="primary" className="px-8" onClick={createCampaign}>
-                  {scheduledAt ? <><Calendar size={16} /> Planifier</> : <><Zap size={16} /> Lancer</>}
+                  <><Zap size={16} /> Lancer</>
                 </Button>
               )}
             </div>
