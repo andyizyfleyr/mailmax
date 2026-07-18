@@ -73,6 +73,7 @@ export interface EmailAttachment {
 export interface SendPayload {
   provider: EmailProvider;
   from: string;
+  fromName?: string;
   to: string;
   subject: string;
   html: string;

@@ -7,14 +7,14 @@ import { sendViaProvider } from "@/lib/sender";
 
 export async function POST(req: NextRequest) {
   const body: SendPayload = await req.json();
-  const { provider, from, to, subject, html, attachments } = body;
+  const { provider, from, fromName, to, subject, html, attachments } = body;
   const id = uuidv4();
   const baseUrl = getBaseUrl();
   const trackedHtml = injectTracking(html, id, baseUrl, to);
 
   // Immediate
   try {
-    const providerId = await sendViaProvider({ provider, from, to, subject, html: trackedHtml, attachments });
+    const providerId = await sendViaProvider({ provider, from, fromName, to, subject, html: trackedHtml, attachments });
     await supabase.from("email_records").insert({ id, provider, from, to, subject, provider_id: providerId, status: "sent" });
     return NextResponse.json({ success: true, id });
   } catch (err: unknown) {

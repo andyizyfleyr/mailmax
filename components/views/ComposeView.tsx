@@ -10,6 +10,7 @@ import { EditorToolbar } from "@/components/editor/EditorToolbar";
 export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: () => void }) {
   const [provider] = useState<EmailProvider>("resend");
   const [from, setFrom] = useState("contact@crediwize.com");
+  const [fromName, setFromName] = useState("CrediWize");
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [html, setHtml] = useState("");
@@ -44,7 +45,7 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
       const res = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, from, to, subject, html, attachments }),
+        body: JSON.stringify({ provider, from, fromName, to, subject, html, attachments }),
       });
       const data = await res.json();
       if (data.success) {
@@ -87,10 +88,14 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
             </Card>
           ) : (
             <Card className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="label">Expéditeur *</label>
+                  <label className="label">Email expéditeur *</label>
                   <input className="input font-mono text-sm" value={from} onChange={e => setFrom(e.target.value)} placeholder="email@exemple.com" />
+                </div>
+                <div className="space-y-2">
+                  <label className="label">Nom expéditeur</label>
+                  <input className="input text-sm" value={fromName} onChange={e => setFromName(e.target.value)} placeholder="Votre nom" />
                 </div>
                 <div className="space-y-2">
                   <label className="label">Destinataire *</label>
