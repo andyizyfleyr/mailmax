@@ -7,7 +7,7 @@ import { sendViaProvider } from "@/lib/sender";
 
 export async function POST(req: NextRequest) {
   const body: SendPayload = await req.json();
-  const { provider, from, fromName, to, subject, html, attachments } = body;
+  const { provider, from, fromName, to, subject, html } = body;
   const id = uuidv4();
   const baseUrl = getBaseUrl();
   const trackedHtml = injectTracking(html, id, baseUrl, to);
