@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import type { Contact, ContactList } from "@/types";
 import { ContactsView } from "@/components/views/ContactsView";
 
 export default function ContactsPage() {
+  const pathname = usePathname();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactList[]>([]);
 
@@ -17,7 +19,7 @@ export default function ContactsPage() {
     } catch {}
   }, []);
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [fetchAll, pathname]);
 
   return <ContactsView contacts={contacts} lists={lists} onRefresh={fetchAll} />;
 }
