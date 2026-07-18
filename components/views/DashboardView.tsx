@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Send, Users, Layers, Megaphone, BarChart2 } from "lucide-react";
 import { DashboardStats } from "@/types";
 import { StatCard, Card } from "@/components/ui";
@@ -10,12 +11,21 @@ import {
 function fmt(n: number) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n); }
 
 export function DashboardView({ stats }: { stats: DashboardStats | null }) {
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setAnimate(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+
   if (!stats) return (
     <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
       <div className="w-10 h-10 rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent animate-spin" />
       <p className="text-xs text-[hsl(var(--muted))]">Chargement...</p>
     </div>
   );
+
+  const maxSent = Math.max(...stats.recentActivity.map(d => d.sent), 1);
 
   return (
     <div className="pb-12 space-y-8">
@@ -40,25 +50,29 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
                 <p className="text-xs text-[hsl(var(--muted))] mt-0.5">Emails envoyés par jour</p>
               </div>
             </div>
-            <div className="h-[280px]">
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={stats.recentActivity} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#4f8cff" stopOpacity={0.4} />
-                      <stop offset="40%" stopColor="#4f8cff" stopOpacity={0.15} />
+                      <stop offset="0%" stopColor="#4f8cff" stopOpacity={animate ? 0.35 : 0} />
+                      <stop offset="50%" stopColor="#4f8cff" stopOpacity={animate ? 0.12 : 0} />
                       <stop offset="100%" stopColor="#4f8cff" stopOpacity={0} />
                     </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.3} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 11 }} dy={8} interval="preserveStartEnd" />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 11 }} width={30} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.2} />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} dy={8} interval="preserveStartEnd" />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} width={25} domain={[0, maxSent]} />
                   <Tooltip
                     contentStyle={{ background: "hsl(var(--s1))", border: "1px solid hsl(var(--border))", borderRadius: "10px", fontSize: "13px" }}
                     cursor={{ stroke: "#4f8cff", strokeWidth: 1, strokeDasharray: "4 4" }}
                   />
                   <Area type="monotone" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés"
-                    isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+                    isAnimationActive={true} animationDuration={1500} animationEasing="ease-out" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

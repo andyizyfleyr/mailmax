@@ -45,14 +45,26 @@ export async function GET() {
 
   const allDays = Array.from(dailyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
 
-  const activity = allDays.map(([dateStr, count]) => {
-    const d = new Date(dateStr + "T00:00:00Z");
-    const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
-    return { date: label, sent: count };
-  });
+  let activity: { date: string; sent: number }[];
 
-  if (activity.length === 0) {
-    activity.push({ date: "Aujourd'hui", sent: 0 });
+  if (allDays.length === 0) {
+    activity = [{ date: "Aujourd'hui", sent: 0 }];
+  } else {
+    const firstDate = new Date(allDays[0][0] + "T00:00:00Z");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const days: string[] = [];
+    const cursor = new Date(firstDate);
+    while (cursor <= today) {
+      days.push(cursor.toISOString().slice(0, 10));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    activity = days.map(dateStr => {
+      const d = new Date(dateStr + "T00:00:00Z");
+      const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+      return { date: label, sent: dailyMap.get(dateStr) || 0 };
+    });
   }
 
   const topCampaigns = campaigns.map((c: any) => ({
