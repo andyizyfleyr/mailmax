@@ -164,9 +164,23 @@ export async function GET() {
     .select("*")
     .order("timestamp", { ascending: false })
     .limit(100);
-    
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data || []);
+
+  const mapped = (data || []).map((e: any) => ({
+    id: e.id,
+    fromEmail: e.from_email,
+    fromName: e.from_name,
+    to: e.to,
+    subject: e.subject,
+    html: e.html,
+    text: e.text,
+    status: e.status,
+    timestamp: e.timestamp,
+    attachments: e.attachments || [],
+  }));
+
+  return NextResponse.json(mapped);
 }
 
 export async function PATCH(req: NextRequest) {

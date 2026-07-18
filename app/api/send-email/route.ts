@@ -53,5 +53,12 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   const { data } = await supabase.from("email_records").select("*").order("timestamp", { ascending: false }).limit(100);
-  return NextResponse.json(data || []);
+  const mapped = (data || []).map((r: any) => ({
+    id: r.id, campaignId: r.campaign_id, provider: r.provider,
+    from: r.from, to: r.to, subject: r.subject,
+    status: r.status, error: r.error,
+    opens: r.opens, clicks: r.clicks,
+    timestamp: r.timestamp, scheduledAt: r.scheduled_at,
+  }));
+  return NextResponse.json(mapped);
 }
