@@ -226,20 +226,35 @@ export function ContactsView({ contacts, lists, onRefresh }: {
       </div>
 
       {totalPages > 1 && !showAll && (
-        <div className="flex items-center justify-center gap-2 pt-6">
+        <div className="flex items-center justify-center gap-1 pt-6 flex-wrap max-w-full">
           <button onClick={() => goTo(safePage - 1)} disabled={safePage <= 1}
             className="px-3 py-1.5 rounded-md text-xs font-medium border border-[hsl(var(--border))] text-[hsl(var(--muted))] hover:text-white hover:border-[hsl(var(--primary)/0.3)] transition-colors disabled:opacity-30 disabled:pointer-events-none">
-            ← Précédent
+            ←
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-            <button key={p} onClick={() => goTo(p)}
-              className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${p === safePage ? "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]" : "text-[hsl(var(--dim))] hover:text-white"}`}>
-              {p}
-            </button>
-          ))}
+          {(() => {
+            const pages: (number | string)[] = [];
+            const delta = 2;
+            const left = Math.max(2, safePage - delta);
+            const right = Math.min(totalPages - 1, safePage + delta);
+            pages.push(1);
+            if (left > 2) pages.push("...");
+            for (let i = left; i <= right; i++) pages.push(i);
+            if (right < totalPages - 1) pages.push("...");
+            if (totalPages > 1) pages.push(totalPages);
+            return pages.map((p, idx) =>
+              typeof p === "string" ? (
+                <span key={`e${idx}`} className="text-[hsl(var(--dim))] text-xs px-1">…</span>
+              ) : (
+                <button key={p} onClick={() => goTo(p)}
+                  className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${p === safePage ? "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border border-[hsl(var(--primary)/0.2)]" : "text-[hsl(var(--dim))] hover:text-white"}`}>
+                  {p}
+                </button>
+              )
+            );
+          })()}
           <button onClick={() => goTo(safePage + 1)} disabled={safePage >= totalPages}
             className="px-3 py-1.5 rounded-md text-xs font-medium border border-[hsl(var(--border))] text-[hsl(var(--muted))] hover:text-white hover:border-[hsl(var(--primary)/0.3)] transition-colors disabled:opacity-30 disabled:pointer-events-none">
-            Suivant →
+            →
           </button>
         </div>
       )}
