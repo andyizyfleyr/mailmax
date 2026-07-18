@@ -120,15 +120,15 @@ export function ContactsView({ contacts, lists, onRefresh }: {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 pb-4">
-        <Card className={`p-5 min-w-[180px] cursor-pointer transition-all ${filterList === "all" ? "ring-1 ring-[hsl(var(--primary))] border-transparent" : "hover:border-[hsl(var(--primary)/0.3)]"}`}
+      <div className="flex flex-wrap gap-3 pb-4 max-w-full">
+        <Card className={`p-5 min-w-[180px] max-w-full flex-1 cursor-pointer transition-all ${filterList === "all" ? "ring-1 ring-[hsl(var(--primary))] border-transparent" : "hover:border-[hsl(var(--primary)/0.3)]"}`}
           onClick={() => setFilterList("all")}>
           <div className="text-xs font-medium text-[hsl(var(--muted))] mb-1">Total</div>
           <div className="text-2xl font-bold text-white">{contacts.length}</div>
           {filterList === "all" && <CheckCircle size={14} className="text-[hsl(var(--primary))] mt-3" />}
         </Card>
         {lists.map(l => (
-          <Card key={l.id} className={`p-5 min-w-[180px] cursor-pointer transition-all ${filterList === l.id ? "ring-1 ring-[hsl(var(--primary))] border-transparent" : "hover:border-[hsl(var(--primary)/0.3)]"}`}
+          <Card key={l.id} className={`p-5 min-w-[180px] max-w-full flex-1 cursor-pointer transition-all ${filterList === l.id ? "ring-1 ring-[hsl(var(--primary))] border-transparent" : "hover:border-[hsl(var(--primary)/0.3)]"}`}
             onClick={() => setFilterList(l.id)}>
             <div className="text-xs font-medium text-[hsl(var(--muted))] mb-1 truncate">{l.name}</div>
             <div className="text-2xl font-bold text-white">{contacts.filter(c => c.listId === l.id).length}</div>
@@ -153,9 +153,9 @@ export function ContactsView({ contacts, lists, onRefresh }: {
       </div>
 
       {/* Desktop table */}
-      <Card className="hidden md:block overflow-x-auto">
+      <Card className="hidden md:block overflow-x-auto max-w-full">
         <div className="table-row font-medium text-[11px] uppercase tracking-wider text-[hsl(var(--dim))] bg-[hsl(var(--s1)/0.5)]"
-             style={{ gridTemplateColumns: "40px 2fr 2fr 1.2fr 1fr 1fr 50px" }}>
+             style={{ gridTemplateColumns: "40px minmax(140px,2fr) minmax(160px,2fr) minmax(100px,1.2fr) 90px 1fr 50px" }}>
           <span><input type="checkbox" checked={paginated.length > 0 && paginated.every(c => selected.includes(c.id))} onChange={toggleAll} className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" /></span>
           <span>Contact</span><span>Email</span><span>Liste</span><span>Statut</span><span>Tags</span><span></span>
         </div>
@@ -168,18 +168,18 @@ export function ContactsView({ contacts, lists, onRefresh }: {
           </div>
         ) : paginated.map(c => (
           <div key={c.id} className={`table-row hover:bg-[hsl(var(--s2)/0.2)] ${selected.includes(c.id) ? "bg-[hsl(var(--primary)/0.03)]" : ""}`}
-               style={{ gridTemplateColumns: "40px 2fr 2fr 1.2fr 1fr 1fr 50px" }}>
+               style={{ gridTemplateColumns: "40px minmax(140px,2fr) minmax(160px,2fr) minmax(100px,1.2fr) 90px 1fr 50px" }}>
             <span><input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" /></span>
-            <span>
-              <span className="font-medium text-white">{c.name}</span>
-              <span className="text-[10px] text-[hsl(var(--dim))] block">{c.id.split('-')[0]}</span>
+            <span className="truncate min-w-0">
+              <span className="font-medium text-white truncate block">{c.name}</span>
+              <span className="text-[10px] text-[hsl(var(--dim))] block truncate">{c.id.split('-')[0]}</span>
             </span>
-            <span className="text-sm text-[hsl(var(--muted))]">{c.email}</span>
-            <span><span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--s2))] text-[hsl(var(--muted))] border border-[hsl(var(--border))]">{lists.find(l => l.id === c.listId)?.name || "Non classé"}</span></span>
+            <span className="text-sm text-[hsl(var(--muted))] truncate min-w-0">{c.email}</span>
+            <span className="truncate min-w-0"><span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--s2))] text-[hsl(var(--muted))] border border-[hsl(var(--border))] truncate block max-w-[140px]">{lists.find(l => l.id === c.listId)?.name || "Non classé"}</span></span>
             <span><Badge variant={c.subscribed ? "success" : "danger"}>{c.subscribed ? "Abonné" : "Désabonné"}</Badge></span>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 min-w-0">
               {(c.tags || []).length > 0 ? c.tags.map((t, idx) => (
-                <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-[hsl(var(--s2))] text-[hsl(var(--primary))] border border-[hsl(var(--primary)/0.15)]">{t}</span>
+                <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-[hsl(var(--s2))] text-[hsl(var(--primary))] border border-[hsl(var(--primary)/0.15)] truncate max-w-[100px]">{t}</span>
               )) : <span className="text-[10px] text-[hsl(var(--dim))] italic">—</span>}
             </div>
             <div className="flex justify-end">
