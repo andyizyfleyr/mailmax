@@ -35,7 +35,7 @@ export async function GET() {
     dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
   }
 
-  const allDays = [...dailyMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const allDays = Array.from(dailyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
 
   let cumulative = 0;
   const activity = allDays.map(([dateStr, count]) => {
