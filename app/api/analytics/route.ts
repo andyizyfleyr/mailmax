@@ -27,18 +27,22 @@ export async function GET() {
 
   const totalSent = campaignSent + composeSent;
 
-  const recentActivity = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const dateStr = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
-    const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(d); dayEnd.setHours(23, 59, 59, 999);
-    const dayStartStr = dayStart.toISOString();
-    const dayEndStr = dayEnd.toISOString();
-    return {
-      date: dateStr,
-      sent: records.filter((r: any) => r.status === "sent" && r.timestamp >= dayStartStr && r.timestamp <= dayEndStr).length,
-    };
+  const dailyMap = new Map<string, number>();
+
+  for (const r of records) {
+    if (r.status !== "sent") continue;
+    const day = (r.timestamp as string).slice(0, 10);
+    dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
+  }
+
+  const allDays = [...dailyMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+  let cumulative = 0;
+  const activity = allDays.map(([dateStr, count]) => {
+    cumulative += count;
+    const d = new Date(dateStr + "T00:00:00Z");
+    const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+    return { date: label, sent: cumulative };
   });
 
   const topCampaigns = campaigns.map((c: any) => ({
@@ -48,6 +52,6 @@ export async function GET() {
 
   return NextResponse.json({
     totalContacts, totalLists, totalCampaigns, totalSent,
-    recentActivity, topCampaigns,
+    recentActivity: activity, topCampaigns,
   });
 }

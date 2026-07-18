@@ -37,7 +37,7 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h3 className="font-display font-bold text-base text-white">Activité</h3>
-                <p className="text-xs text-[hsl(var(--muted))] mt-0.5">Emails envoyés (7 derniers jours)</p>
+                <p className="text-xs text-[hsl(var(--muted))] mt-0.5">Cumul des emails envoyés</p>
               </div>
             </div>
             <div className="h-[280px]">
