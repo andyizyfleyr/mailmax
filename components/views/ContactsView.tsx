@@ -105,7 +105,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
 
   return (
     <div className="pb-12">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h2 className="font-display font-bold text-xl text-white">Contacts</h2>
           <p className="text-sm text-[hsl(var(--muted))] mt-0.5">Gérez votre audience</p>
@@ -149,7 +149,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
         )}
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden overflow-x-auto">
         <div className="table-row font-medium text-[11px] uppercase tracking-wider text-[hsl(var(--dim))] bg-[hsl(var(--s1)/0.5)]"
              style={{ gridTemplateColumns: "40px 2fr 2fr 1.2fr 1fr 1fr 50px" }}>
           <span><input type="checkbox" checked={paginated.length > 0 && paginated.every(c => selected.includes(c.id))} onChange={toggleAll} className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" /></span>

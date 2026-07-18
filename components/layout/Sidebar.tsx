@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Send, Users, Megaphone, Zap, ChevronRight, AlignLeft } from "lucide-react";
+import { LayoutDashboard, Send, Users, Megaphone, Zap, ChevronRight, AlignLeft, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export type View = "dashboard" | "compose" | "contacts" | "campaigns";
@@ -19,41 +19,58 @@ export function Sidebar({ view, collapsed, onToggle }: {
 }) {
   const router = useRouter();
 
-  return (
-    <aside className={`fixed inset-y-0 left-0 flex flex-col z-50 border-r border-[hsl(var(--border))] bg-[hsl(var(--bg))] transition-all duration-200 ${collapsed ? "w-[68px]" : "w-60"}`}>
-      <div className={`flex items-center gap-3 p-5 border-b border-[hsl(var(--border))] ${collapsed ? "justify-center px-0" : ""}`}>
-        <div className="w-9 h-9 rounded-lg bg-[hsl(var(--primary)/0.12)] flex items-center justify-center shrink-0">
-          <Zap size={18} className="text-[hsl(var(--primary))]" />
-        </div>
-        {!collapsed && (
-          <div>
-            <h1 className="font-display font-bold text-lg text-white leading-tight">MailMax</h1>
-            <p className="text-[9px] text-[hsl(var(--dim))] font-medium leading-tight">Email Platform</p>
-          </div>
-        )}
-      </div>
+  function navTo(id: string) {
+    router.push(`/${id}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
-      <nav className="flex-1 px-2 py-4 space-y-1">
+  return (
+    <>
+      <aside className={`hidden md:flex fixed inset-y-0 left-0 flex-col z-50 border-r border-[hsl(var(--border))] bg-[hsl(var(--bg))] transition-all duration-200 ${collapsed ? "w-[68px]" : "w-60"}`}>
+        <div className={`flex items-center gap-3 p-5 border-b border-[hsl(var(--border))] ${collapsed ? "justify-center px-0" : ""}`}>
+          <div className="w-9 h-9 rounded-lg bg-[hsl(var(--primary)/0.12)] flex items-center justify-center shrink-0">
+            <Zap size={18} className="text-[hsl(var(--primary))]" />
+          </div>
+          {!collapsed && (
+            <div>
+              <h1 className="font-display font-bold text-lg text-white leading-tight">MailMax</h1>
+              <p className="text-[9px] text-[hsl(var(--dim))] font-medium leading-tight">Email Platform</p>
+            </div>
+          )}
+        </div>
+
+        <nav className="flex-1 px-2 py-4 space-y-1">
+          {NAV.map(n => (
+            <button key={n.id} onClick={() => navTo(n.id)}
+              className={`nav-item w-full ${collapsed ? "justify-center px-0 py-3 group" : ""} ${view === n.id ? "active" : ""}`}>
+              <span className={view === n.id ? "" : "opacity-70"}>{n.icon}</span>
+              {!collapsed && <span>{n.label}</span>}
+              {collapsed && (
+                <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[hsl(var(--s3))] text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg border border-[hsl(var(--border))]">
+                  {n.label}
+                </div>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-2 border-t border-[hsl(var(--border))]">
+          <button onClick={onToggle}
+            className="w-full h-10 flex items-center justify-center rounded-lg bg-[hsl(var(--s2))] hover:bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white transition-all">
+            {collapsed ? <ChevronRight size={18} /> : <AlignLeft size={18} />}
+          </button>
+        </div>
+      </aside>
+
+      <nav className="fixed bottom-0 inset-x-0 z-50 flex md:hidden bg-[hsl(var(--bg))] border-t border-[hsl(var(--border))] px-2 pb-[env(safe-area-inset-bottom,0px)] pt-1">
         {NAV.map(n => (
-          <button key={n.id} onClick={() => { router.push(`/${n.id}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`nav-item w-full ${collapsed ? "justify-center px-0 py-3 group" : ""} ${view === n.id ? "active" : ""}`}>
-            <span className={view === n.id ? "" : "opacity-70"}>{n.icon}</span>
-            {!collapsed && <span>{n.label}</span>}
-            {collapsed && (
-              <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[hsl(var(--s3))] text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg border border-[hsl(var(--border))]">
-                {n.label}
-              </div>
-            )}
+          <button key={n.id} onClick={() => navTo(n.id)}
+            className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg transition-colors ${view === n.id ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--dim))]"}`}>
+            <span className={view === n.id ? "" : "opacity-60"}>{n.icon}</span>
+            <span className="text-[10px] font-medium">{n.label}</span>
           </button>
         ))}
       </nav>
-
-      <div className="p-2 border-t border-[hsl(var(--border))]">
-        <button onClick={onToggle}
-          className="w-full h-10 flex items-center justify-center rounded-lg bg-[hsl(var(--s2))] hover:bg-[hsl(var(--s3))] border border-[hsl(var(--border))] text-[hsl(var(--dim))] hover:text-white transition-all">
-          {collapsed ? <ChevronRight size={18} /> : <AlignLeft size={18} />}
-        </button>
-      </div>
-    </aside>
+    </>
   );
 }

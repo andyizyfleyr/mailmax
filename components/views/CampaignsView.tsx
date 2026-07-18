@@ -92,7 +92,7 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
 
   return (
     <div className="pb-20 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h2 className="font-display font-bold text-xl text-white">Campagnes</h2>
           <p className="text-sm text-[hsl(var(--muted))] mt-0.5">{campaigns.length} campagne{campaigns.length > 1 ? "s" : ""}</p>
@@ -127,7 +127,7 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                 </button>
               </div>
 
-              <div className="p-5 grid grid-cols-4 gap-4">
+              <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
                   { label: "Envoyés", val: c.stats.sent, icon: <Send size={13} />, color: "var(--primary)" },
                   { label: "Ouverts", val: c.stats.opens, icon: <Eye size={13} />, color: "var(--info)" },

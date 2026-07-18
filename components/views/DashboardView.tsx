@@ -19,14 +19,14 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
 
   return (
     <div className="pb-12 space-y-8">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h2 className="font-display font-bold text-xl text-white">Dashboard</h2>
           <p className="text-sm text-[hsl(var(--muted))] mt-0.5">Vue d'ensemble de votre activité</p>
         </div>
         <div className="flex bg-[hsl(var(--s1))] rounded-lg border border-[hsl(var(--border))] p-0.5">
           {["7J", "30J", "YTD"].map(d => (
-            <button key={d} className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-all ${d === "7J" ? "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]" : "text-[hsl(var(--dim))] hover:text-white"}`}>
+            <button key={d} className={`px-2 md:px-3.5 py-1.5 rounded-md text-[10px] md:text-xs font-medium transition-all ${d === "7J" ? "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]" : "text-[hsl(var(--dim))] hover:text-white"}`}>
               {d}
             </button>
           ))}

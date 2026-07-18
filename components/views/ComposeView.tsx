@@ -63,7 +63,7 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
 
   return (
     <div className="pb-20 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h2 className="font-display font-bold text-xl text-white">Composer un Email</h2>
           <p className="text-sm text-[hsl(var(--muted))] mt-0.5">Rédigez et envoyez un message</p>

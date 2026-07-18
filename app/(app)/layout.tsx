@@ -40,9 +40,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-[hsl(var(--bg))] overflow-hidden">
       <Sidebar view={view} collapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
-      <main className={`flex-1 transition-all duration-200 flex flex-col ${isSidebarCollapsed ? "ml-[68px]" : "ml-60"}`}>
+      <main className={`flex-1 transition-all duration-200 flex flex-col ml-0 pb-16 md:pb-0 ${isSidebarCollapsed ? "md:ml-[68px]" : "md:ml-60"}`}>
         <Header view={view} scrolled={isScrolled} />
-        <div className="px-8 py-6 flex-1 overflow-y-auto">
+        <div className="px-4 md:px-8 py-4 md:py-6 flex-1 overflow-y-auto">
           {children}
         </div>
       </main>
