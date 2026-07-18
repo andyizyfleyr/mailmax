@@ -52,27 +52,26 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
             </div>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.recentActivity} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                <AreaChart data={stats.recentActivity} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#4f8cff" stopOpacity={animate ? 0.35 : 0} />
-                      <stop offset="50%" stopColor="#4f8cff" stopOpacity={animate ? 0.12 : 0} />
+                      <stop offset="0%" stopColor="#4f8cff" stopOpacity={animate ? 0.4 : 0} />
+                      <stop offset="40%" stopColor="#4f8cff" stopOpacity={animate ? 0.15 : 0} />
                       <stop offset="100%" stopColor="#4f8cff" stopOpacity={0} />
                     </linearGradient>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="2" result="blur" />
-                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.2} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} dy={8} interval="preserveStartEnd" />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} width={25} domain={[0, maxSent]} />
+                  <CartesianGrid strokeDasharray="2 2" stroke="hsl(var(--border))" vertical={false} opacity={0.25} />
+                  <XAxis dataKey="date" axisLine={{ stroke: "hsl(var(--border))", strokeWidth: 1 }} tickLine={{ stroke: "hsl(var(--border))", strokeWidth: 1 }} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} dy={8} interval="preserveStartEnd" minTickGap={30} />
+                  <YAxis axisLine={{ stroke: "hsl(var(--border))", strokeWidth: 1 }} tickLine={{ stroke: "hsl(var(--border))", strokeWidth: 1 }} tick={{ fill: "hsl(var(--dim))", fontSize: 10 }} width={35} domain={[0, maxSent]} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{ background: "hsl(var(--s1))", border: "1px solid hsl(var(--border))", borderRadius: "10px", fontSize: "13px" }}
-                    cursor={{ stroke: "#4f8cff", strokeWidth: 1, strokeDasharray: "4 4" }}
+                    cursor={{ stroke: "#4f8cff", strokeWidth: 1, strokeDasharray: "3 3" }}
+                    formatter={(value: number) => [value, "Envoyés"]}
+                    labelStyle={{ color: "hsl(var(--muted))", fontSize: 11 }}
                   />
-                  <Area type="monotone" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés"
-                    isAnimationActive={true} animationDuration={1500} animationEasing="ease-out" />
+                  <Area type="basis" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés"
+                    isAnimationActive={true} animationDuration={1500} animationEasing="ease-out"
+                    dot={false} activeDot={{ r: 4, fill: "#4f8cff", stroke: "hsl(var(--s1))", strokeWidth: 2 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
