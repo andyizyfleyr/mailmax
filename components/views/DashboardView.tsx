@@ -34,10 +34,10 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard value={fmt(stats.totalSent)} label="Emails envoyés" icon={<Send size={18} />} color="var(--primary)" delta="+12.5%" />
-        <StatCard value={fmt(stats.totalOpens)} label="Ouvertures" icon={<Eye size={18} />} color="var(--info)" delta="+4.3%" />
-        <StatCard value={fmt(stats.totalClicks)} label="Clics" icon={<MousePointer size={18} />} color="var(--success)" delta="-1.2%" trend="down" />
-        <StatCard value={fmt(stats.totalUnsubs)} label="Désabonnements" icon={<UserMinus size={18} />} color="var(--danger)" delta="-0.05%" />
+        <StatCard value={fmt(stats.totalSent)} label="Emails envoyés" icon={<Send size={18} />} color="var(--primary)" />
+        <StatCard value={fmt(stats.totalOpens)} label="Ouvertures" icon={<Eye size={18} />} color="var(--info)" />
+        <StatCard value={fmt(stats.totalClicks)} label="Clics" icon={<MousePointer size={18} />} color="var(--success)" />
+        <StatCard value={fmt(stats.totalUnsubs)} label="Désabonnements" icon={<UserMinus size={18} />} color="var(--danger)" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
