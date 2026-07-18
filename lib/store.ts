@@ -44,6 +44,12 @@ export const scheduledJobs = new Map<string, ReturnType<typeof setTimeout>>();
 // ---- UNSUBSCRIBE TOKENS ----
 export const unsubTokens = new Map<string, string>(); // token → email
 
+export function getBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
 export function generateUnsubToken(email: string): string {
   const token = Buffer.from(email).toString("base64url");
   unsubTokens.set(token, email);

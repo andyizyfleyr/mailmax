@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import { v4 as uuidv4 } from "uuid";
-import { injectTracking } from "./store";
+import { injectTracking, getBaseUrl } from "./store";
 import { sendViaProvider } from "./sender";
 
 export async function runCampaign(campaignId: string) {
@@ -34,7 +34,7 @@ export async function runCampaign(campaignId: string) {
       error_message: null
     }).eq("id", campaignId);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = getBaseUrl();
     let sent = 0, failed = 0;
 
     for (const contact of recipients) {

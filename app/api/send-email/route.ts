@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { SendPayload } from "@/types";
 import { supabase } from "@/lib/supabase";
-import { scheduledJobs, injectTracking } from "@/lib/store";
+import { scheduledJobs, injectTracking, getBaseUrl } from "@/lib/store";
 import { sendViaProvider } from "@/lib/sender";
 
 export async function POST(req: NextRequest) {
   const body: SendPayload = await req.json();
   const { provider, from, to, subject, html, attachments, scheduledAt } = body;
   const id = uuidv4();
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl();
   const trackedHtml = injectTracking(html, id, baseUrl, to);
 
   // Scheduled
