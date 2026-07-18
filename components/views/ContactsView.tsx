@@ -13,6 +13,8 @@ export function ContactsView({ contacts, lists, onRefresh }: {
   const [showAddContact, setShowAddContact] = useState(false);
   const [showAddList, setShowAddList] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const perPage = 20;
   const [newEmail, setNewEmail] = useState(""); const [newName, setNewName] = useState(""); const [newList, setNewList] = useState("");
   const [newTags, setNewTags] = useState("");
 
@@ -36,6 +38,17 @@ export function ContactsView({ contacts, lists, onRefresh }: {
     const matchList = filterList === "all" || c.listId === filterList;
     return matchSearch && matchList;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * perPage, safePage * perPage);
+
+  function goTo(p: number) { setPage(Math.max(1, Math.min(p, totalPages))); }
+
+  const [prevFilterList, setPrevFilterList] = useState(filterList);
+  const [prevSearch, setPrevSearch] = useState(search);
+  if (filterList !== prevFilterList) { setPrevFilterList(filterList); setPage(1); }
+  if (search !== prevSearch) { setPrevSearch(search); setPage(1); }
 
   async function addList() {
     if (!newListName) return;
@@ -61,8 +74,12 @@ export function ContactsView({ contacts, lists, onRefresh }: {
   }
 
   function toggleAll() {
-    if (selected.length === filtered.length) setSelected([]);
-    else setSelected(filtered.map(c => c.id));
+    if (paginated.every(c => selected.includes(c.id))) {
+      setSelected(prev => prev.filter(id => !paginated.some(c => c.id === id)));
+    } else {
+      const pageIds = paginated.map(c => c.id);
+      setSelected(prev => [...new Set([...prev, ...pageIds])]);
+    }
   }
 
   async function handleCsvImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -126,7 +143,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
       <Card className="overflow-hidden">
         <div className="table-row font-medium text-[11px] uppercase tracking-wider text-[hsl(var(--dim))] bg-[hsl(var(--s1)/0.5)]"
              style={{ gridTemplateColumns: "40px 2fr 2fr 1.2fr 1fr 1fr 50px" }}>
-          <span><input type="checkbox" checked={filtered.length > 0 && selected.length === filtered.length} onChange={toggleAll} className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" /></span>
+          <span><input type="checkbox" checked={paginated.length > 0 && paginated.every(c => selected.includes(c.id))} onChange={toggleAll} className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" /></span>
           <span>Contact</span><span>Email</span><span>Liste</span><span>Statut</span><span>Tags</span><span></span>
         </div>
 
@@ -136,7 +153,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
             <p className="text-sm font-medium text-white mb-1">Aucun contact trouvé</p>
             <p className="text-xs text-[hsl(var(--muted))]">Modifiez vos filtres ou ajoutez des contacts.</p>
           </div>
-        ) : filtered.map(c => (
+        ) : paginated.map(c => (
           <div key={c.id} className={`table-row hover:bg-[hsl(var(--s2)/0.2)] ${selected.includes(c.id) ? "bg-[hsl(var(--primary)/0.03)]" : ""}`}
                style={{ gridTemplateColumns: "40px 2fr 2fr 1.2fr 1fr 1fr 50px" }}>
             <span><input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" /></span>
@@ -160,6 +177,25 @@ export function ContactsView({ contacts, lists, onRefresh }: {
           </div>
         ))}
       </Card>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-6">
+          <button onClick={() => goTo(safePage - 1)} disabled={safePage <= 1}
+            className="px-3 py-1.5 rounded-md text-xs font-medium border border-[hsl(var(--border))] text-[hsl(var(--muted))] hover:text-white hover:border-[hsl(var(--primary)/0.3)] transition-colors disabled:opacity-30 disabled:pointer-events-none">
+            ← Précédent
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button key={p} onClick={() => goTo(p)}
+              className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${p === safePage ? "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]" : "text-[hsl(var(--dim))] hover:text-white"}`}>
+              {p}
+            </button>
+          ))}
+          <button onClick={() => goTo(safePage + 1)} disabled={safePage >= totalPages}
+            className="px-3 py-1.5 rounded-md text-xs font-medium border border-[hsl(var(--border))] text-[hsl(var(--muted))] hover:text-white hover:border-[hsl(var(--primary)/0.3)] transition-colors disabled:opacity-30 disabled:pointer-events-none">
+            Suivant →
+          </button>
+        </div>
+      )}
 
       {showAddContact && (
         <Modal onClose={() => setShowAddContact(false)} maxWidth={440}>
