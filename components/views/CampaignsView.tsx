@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { Plus, Trash2, Play, Loader2, CheckCircle, XCircle, RefreshCw, Send, Eye, MousePointer, UserMinus, Megaphone, X, Paperclip, Calendar, Upload, Zap } from "lucide-react";
 import { EmailProvider, Campaign, ContactList, Contact, EmailAttachment } from "@/types";
-import { Badge, Button, Card, Modal } from "@/components/ui";
+import { Badge, Button, Card, Modal, ConfirmDialog, AlertDialog } from "@/components/ui";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 
 const PROVIDERS: EmailProvider[] = ["resend"];
@@ -17,6 +17,8 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -46,11 +48,11 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
 
   async function createCampaign() {
     if (!name || !subject || !listId || !fromEmail) {
-      alert("Tous les champs (Nom, Sujet, Audience, Expéditeur) sont requis !");
+      setAlertMsg("Tous les champs (Nom, Sujet, Audience, Expéditeur) sont requis !");
       return;
     }
     if (!listId.includes("-") || listId === "list-1") {
-      alert("Veuillez d'abord créer une vraie audience dans l'onglet 'Contacts' !");
+      setAlertMsg("Veuillez d'abord créer une vraie audience dans l'onglet 'Contacts' !");
       return;
     }
     try {
@@ -60,11 +62,11 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
         body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments, scheduledAt: scheduledAt || undefined }),
       });
       const data = await res.json();
-      if (!res.ok) { alert("Erreur : " + (data.error || "Échec de création")); return; }
+      if (!res.ok) { setAlertMsg("Erreur : " + (data.error || "Échec de création")); return; }
       setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setScheduledAt(""); setAttachments([]);
       onRefresh();
       if (!scheduledAt && data.id) sendCampaign(data.id);
-    } catch { alert("Erreur de connexion au serveur."); }
+    } catch { setAlertMsg("Erreur de connexion au serveur."); }
   }
 
   async function sendCampaign(id: string) {
@@ -73,10 +75,10 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
     setSending(null); onRefresh();
   }
 
-  async function deleteCampaign(id: string) {
-    if (!confirm("Supprimer cette campagne ?")) return;
-    await fetch("/api/campaigns", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    onRefresh();
+  async function doDeleteCampaign() {
+    if (!confirmDeleteId) return;
+    await fetch("/api/campaigns", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: confirmDeleteId }) });
+    setConfirmDeleteId(null); onRefresh();
   }
 
   function execCmd(cmd: string, val?: string) {
@@ -120,7 +122,7 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                   <h3 className="font-display font-bold text-lg text-white">{c.name}</h3>
                   <p className="text-xs text-[hsl(var(--muted))]">{c.subject}</p>
                 </div>
-                <button onClick={() => deleteCampaign(c.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.1)] transition-colors">
+                <button onClick={() => setConfirmDeleteId(c.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.1)] transition-colors">
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -293,6 +295,9 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
           </div>
         </Modal>
       )}
+
+      <ConfirmDialog open={!!confirmDeleteId} title="Supprimer la campagne" description="Êtes-vous sûr de vouloir supprimer cette campagne ? Cette action est irréversible." confirmLabel="Supprimer" onConfirm={doDeleteCampaign} onCancel={() => setConfirmDeleteId(null)} />
+      <AlertDialog open={!!alertMsg} title="Attention" description={alertMsg || ""} onClose={() => setAlertMsg(null)} />
     </div>
   );
 }

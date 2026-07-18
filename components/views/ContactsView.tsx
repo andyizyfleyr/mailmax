@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus, Upload, Trash2, Users, Search, CheckCircle } from "lucide-react";
 import { Contact, ContactList } from "@/types";
-import { Card, Badge, Button, Modal } from "@/components/ui";
+import { Card, Badge, Button, Modal, ConfirmDialog, AlertDialog } from "@/components/ui";
 
 export function ContactsView({ contacts, lists, onRefresh }: {
   contacts: Contact[]; lists: ContactList[]; onRefresh: () => void;
@@ -30,6 +30,9 @@ export function ContactsView({ contacts, lists, onRefresh }: {
     setNewEmail(""); setNewName(""); setNewTags(""); setShowAddContact(false); onRefresh();
   }
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
+  const [alertImport, setAlertImport] = useState(false);
   const [newListName, setNewListName] = useState(""); const [newListDesc, setNewListDesc] = useState("");
 
   const filtered = contacts.filter(c => {
@@ -57,17 +60,15 @@ export function ContactsView({ contacts, lists, onRefresh }: {
     setNewListName(""); setNewListDesc(""); setShowAddList(false); onRefresh();
   }
 
-  async function deleteContact(id: string) {
-    if (!confirm("Supprimer ce contact ?")) return;
-    await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    onRefresh();
+  async function doDeleteContact() {
+    if (!confirmDeleteId) return;
+    await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: confirmDeleteId }) });
+    setConfirmDeleteId(null); onRefresh();
   }
 
-  async function deleteSelected() {
-    if (selected.length === 0) return;
-    if (!confirm(`Supprimer ces ${selected.length} contacts ?`)) return;
+  async function doDeleteSelected() {
     await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: selected }) });
-    setSelected([]); onRefresh();
+    setSelected([]); setConfirmDeleteSelected(false); onRefresh();
   }
 
   function toggleSelect(id: string) {
@@ -90,7 +91,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
       const parts = line.split(",");
       return { email: parts[0]?.trim(), name: parts[1]?.trim() };
     }).filter(r => r.email);
-    if (!filterList || filterList === "all") { alert("Sélectionnez une liste spécifique avant d'importer."); return; }
+    if (!filterList || filterList === "all") { setAlertImport(true); return; }
     await fetch("/api/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "import", rows, listId: filterList }) });
     onRefresh();
   }
@@ -135,7 +136,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
           <input className="input !pl-10" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         {selected.length > 0 && (
-          <Button variant="danger" onClick={deleteSelected}>
+          <Button variant="danger" onClick={() => setConfirmDeleteSelected(true)}>
             <Trash2 size={14} /> ({selected.length})
           </Button>
         )}
@@ -171,7 +172,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
               )) : <span className="text-[10px] text-[hsl(var(--dim))] italic">—</span>}
             </div>
             <div className="flex justify-end">
-              <button onClick={() => deleteContact(c.id)} className="w-7 h-7 rounded-md flex items-center justify-center text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.1)] transition-colors">
+              <button onClick={() => setConfirmDeleteId(c.id)} className="w-7 h-7 rounded-md flex items-center justify-center text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.1)] transition-colors">
                 <Trash2 size={13} />
               </button>
             </div>
@@ -231,6 +232,10 @@ export function ContactsView({ contacts, lists, onRefresh }: {
           </div>
         </Modal>
       )}
+
+      <ConfirmDialog open={!!confirmDeleteId} title="Supprimer le contact" description="Êtes-vous sûr de vouloir supprimer ce contact ? Cette action est irréversible." confirmLabel="Supprimer" onConfirm={doDeleteContact} onCancel={() => setConfirmDeleteId(null)} />
+      <ConfirmDialog open={confirmDeleteSelected} title="Supprimer les contacts" description={`Êtes-vous sûr de vouloir supprimer ces ${selected.length} contacts ? Cette action est irréversible.`} confirmLabel="Supprimer" onConfirm={doDeleteSelected} onCancel={() => setConfirmDeleteSelected(false)} />
+      <AlertDialog open={alertImport} title="Impossible d'importer" description="Sélectionnez une liste spécifique avant d'importer un fichier CSV." onClose={() => setAlertImport(false)} />
 
       {showAddList && (
         <Modal onClose={() => setShowAddList(false)} maxWidth={440}>

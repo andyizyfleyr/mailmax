@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Mail, RefreshCw, Trash2, Download, X, Eye } from "lucide-react";
 import { InboundEmail } from "@/types";
-import { Badge, Button, Card } from "@/components/ui";
+import { Badge, Button, Card, ConfirmDialog } from "@/components/ui";
 
 function relTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -16,6 +16,7 @@ function relTime(iso: string) {
 export function InboxView({ emails, onRefresh }: { emails: InboundEmail[]; onRefresh: () => void }) {
   const [filter, setFilter] = useState("all");
   const [selectedEmail, setSelectedEmail] = useState<InboundEmail | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const filtered = emails.filter(e => filter === "all" || e.status === filter);
 
   async function updateStatus(id: string, status: string) {
@@ -29,9 +30,9 @@ export function InboxView({ emails, onRefresh }: { emails: InboundEmail[]; onRef
   }
 
   async function deleteEmail(id: string) {
-    if (!confirm("Supprimer cet email ?")) return;
     await fetch(`/api/inbound?id=${id}`, { method: "DELETE" });
     onRefresh();
+    setConfirmDeleteId(null);
     if (selectedEmail?.id === id) setSelectedEmail(null);
   }
 
@@ -113,7 +114,7 @@ export function InboxView({ emails, onRefresh }: { emails: InboundEmail[]; onRef
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-[hsl(var(--dim))] hover:text-white hover:bg-[hsl(var(--s2))] transition-colors">
                   <Download size={15} />
                 </button>
-                <button onClick={() => deleteEmail(selectedEmail.id)}
+                <button onClick={() => setConfirmDeleteId(selectedEmail.id)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.1)] transition-colors">
                   <Trash2 size={15} />
                 </button>
@@ -132,6 +133,8 @@ export function InboxView({ emails, onRefresh }: { emails: InboundEmail[]; onRef
           </div>
         )}
       </div>
+
+      <ConfirmDialog open={!!confirmDeleteId} title="Supprimer l'email" description="Êtes-vous sûr de vouloir supprimer cet email ? Cette action est irréversible." confirmLabel="Supprimer" onConfirm={() => deleteEmail(confirmDeleteId!)} onCancel={() => setConfirmDeleteId(null)} />
     </div>
   );
 }
