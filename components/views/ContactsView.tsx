@@ -15,7 +15,6 @@ export function ContactsView({ contacts, lists, onRefresh }: {
   const [selected, setSelected] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
-  const perPage = showAll ? filtered.length : 5;
   const [newEmail, setNewEmail] = useState(""); const [newName, setNewName] = useState(""); const [newList, setNewList] = useState("");
   const [newTags, setNewTags] = useState("");
 
@@ -42,6 +41,8 @@ export function ContactsView({ contacts, lists, onRefresh }: {
     const matchList = filterList === "all" || c.listId === filterList;
     return matchSearch && matchList;
   });
+
+  const perPage = showAll ? filtered.length : 5;
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const safePage = Math.min(page, totalPages);
