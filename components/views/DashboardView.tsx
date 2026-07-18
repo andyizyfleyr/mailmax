@@ -42,11 +42,11 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
             </div>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.recentActivity} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                <AreaChart data={stats.recentActivity.length > 0 ? stats.recentActivity : [{ date: "Aucune", sent: 0 }]} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#4f8cff" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#4f8cff" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.5} />
@@ -56,7 +56,7 @@ export function DashboardView({ stats }: { stats: DashboardStats | null }) {
                     contentStyle={{ background: "hsl(var(--s1))", border: "1px solid hsl(var(--border))", borderRadius: "10px", fontSize: "13px" }}
                     cursor={{ stroke: "hsl(var(--primary) / 0.3)", strokeWidth: 1 }}
                   />
-                  <Area type="monotone" dataKey="sent" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés" />
+                  <Area type="linear" dataKey="sent" stroke="#4f8cff" strokeWidth={2.5} fill="url(#gSent)" name="Envoyés" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
