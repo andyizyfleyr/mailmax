@@ -147,9 +147,13 @@ export function ContactsView({ contacts, lists, onRefresh }: {
             <Trash2 size={14} /> ({selected.length})
           </Button>
         )}
+        <button onClick={toggleAll} className="md:hidden text-xs text-[hsl(var(--dim))] hover:text-white font-medium px-2">
+          {paginated.length > 0 && paginated.every(c => selected.includes(c.id)) ? "Tout désél." : "Tout sél."}
+        </button>
       </div>
 
-      <Card className="overflow-hidden overflow-x-auto">
+      {/* Desktop table */}
+      <Card className="hidden md:block overflow-x-auto">
         <div className="table-row font-medium text-[11px] uppercase tracking-wider text-[hsl(var(--dim))] bg-[hsl(var(--s1)/0.5)]"
              style={{ gridTemplateColumns: "40px 2fr 2fr 1.2fr 1fr 1fr 50px" }}>
           <span><input type="checkbox" checked={paginated.length > 0 && paginated.every(c => selected.includes(c.id))} onChange={toggleAll} className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" /></span>
@@ -186,6 +190,40 @@ export function ContactsView({ contacts, lists, onRefresh }: {
           </div>
         ))}
       </Card>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="py-24 text-center">
+            <Users size={40} className="mx-auto mb-4 text-[hsl(var(--dim))] opacity-20" />
+            <p className="text-sm font-medium text-white mb-1">Aucun contact trouvé</p>
+            <p className="text-xs text-[hsl(var(--muted))]">Modifiez vos filtres ou ajoutez des contacts.</p>
+          </div>
+        ) : paginated.map(c => (
+          <Card key={c.id} className={`p-4 ${selected.includes(c.id) ? "ring-1 ring-[hsl(var(--primary))]" : ""}`}>
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)}
+                  className="w-4 h-4 rounded border-[hsl(var(--border))] bg-[hsl(var(--s2))] text-[hsl(var(--primary))] focus:ring-0 cursor-pointer" />
+                <div>
+                  <span className="font-medium text-white text-sm">{c.name}</span>
+                  <span className="text-[10px] text-[hsl(var(--dim))] block">{c.email}</span>
+                </div>
+              </div>
+              <button onClick={() => setConfirmDeleteId(c.id)} className="w-7 h-7 rounded-md flex items-center justify-center text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.1)] transition-colors">
+                <Trash2 size={13} />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center text-xs text-[hsl(var(--muted))]">
+              <span className="px-2 py-0.5 rounded bg-[hsl(var(--s2))] border border-[hsl(var(--border))]">{lists.find(l => l.id === c.listId)?.name || "Non classé"}</span>
+              <Badge variant={c.subscribed ? "success" : "danger"}>{c.subscribed ? "Abonné" : "Désabonné"}</Badge>
+              {(c.tags || []).length > 0 && c.tags.map((t, idx) => (
+                <span key={idx} className="px-1.5 py-0.5 rounded bg-[hsl(var(--s2))] text-[hsl(var(--primary))] border border-[hsl(var(--primary)/0.15)]">{t}</span>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
 
       {totalPages > 1 && !showAll && (
         <div className="flex items-center justify-center gap-2 pt-6">
