@@ -87,8 +87,10 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const body = await req.json();
-  const { id, ids } = body;
-  if (ids && Array.isArray(ids)) {
+  const { id, ids, listId } = body;
+  if (listId) {
+    await supabase.from("lists").delete().eq("id", listId);
+  } else if (ids && Array.isArray(ids)) {
     await supabase.from("contacts").delete().in("id", ids);
   } else if (id) {
     await supabase.from("contacts").delete().eq("id", id);

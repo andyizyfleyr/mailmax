@@ -31,6 +31,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
+  const [confirmDeleteListId, setConfirmDeleteListId] = useState<string | null>(null);
   const [alertImport, setAlertImport] = useState(false);
   const [alertImportMsg, setAlertImportMsg] = useState("Sélectionnez une liste spécifique avant d'importer un fichier CSV.");
   const [newListName, setNewListName] = useState(""); const [newListDesc, setNewListDesc] = useState("");
@@ -64,13 +65,29 @@ export function ContactsView({ contacts, lists, onRefresh }: {
 
   async function doDeleteContact() {
     if (!confirmDeleteId) return;
-    await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: confirmDeleteId }) });
+    try {
+      await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: confirmDeleteId }) });
+    } catch {}
     setConfirmDeleteId(null); onRefresh();
   }
 
   async function doDeleteSelected() {
-    await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: selected }) });
+    const ids = [...selected];
+    try {
+      await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }) });
+    } catch {}
     setSelected([]); setConfirmDeleteSelected(false); onRefresh();
+  }
+
+  async function doDeleteList() {
+    if (!confirmDeleteListId) return;
+    const id = confirmDeleteListId;
+    try {
+      await fetch("/api/contacts", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ listId: id }) });
+    } catch {}
+    setConfirmDeleteListId(null);
+    if (filterList === id) setFilterList("all");
+    onRefresh();
   }
 
   function toggleSelect(id: string) {
@@ -132,8 +149,12 @@ export function ContactsView({ contacts, lists, onRefresh }: {
           {filterList === "all" && <CheckCircle size={14} className="text-[hsl(var(--primary))] mt-3" />}
         </Card>
         {lists.map(l => (
-          <Card key={l.id} className={`p-5 min-w-[180px] max-w-full flex-1 cursor-pointer transition-all ${filterList === l.id ? "ring-1 ring-[hsl(var(--primary))] border-transparent" : "hover:border-[hsl(var(--primary)/0.3)]"}`}
+          <Card key={l.id} className={`p-5 min-w-[180px] max-w-full flex-1 cursor-pointer transition-all relative group ${filterList === l.id ? "ring-1 ring-[hsl(var(--primary))] border-transparent" : "hover:border-[hsl(var(--primary)/0.3)]"}`}
             onClick={() => setFilterList(l.id)}>
+            <button onClick={e => { e.stopPropagation(); setConfirmDeleteListId(l.id); }}
+              className="absolute top-2 right-2 w-6 h-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger)/0.1)] transition-all">
+              <Trash2 size={12} />
+            </button>
             <div className="text-xs font-medium text-[hsl(var(--muted))] mb-1 truncate">{l.name}</div>
             <div className="text-2xl font-bold text-white">{contacts.filter(c => c.listId === l.id).length}</div>
             {filterList === l.id && <CheckCircle size={14} className="text-[hsl(var(--primary))] mt-3" />}
@@ -299,6 +320,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
 
       <ConfirmDialog open={!!confirmDeleteId} title="Supprimer le contact" description="Êtes-vous sûr de vouloir supprimer ce contact ? Cette action est irréversible." confirmLabel="Supprimer" onConfirm={doDeleteContact} onCancel={() => setConfirmDeleteId(null)} />
       <ConfirmDialog open={confirmDeleteSelected} title="Supprimer les contacts" description={`Êtes-vous sûr de vouloir supprimer ces ${selected.length} contacts ? Cette action est irréversible.`} confirmLabel="Supprimer" onConfirm={doDeleteSelected} onCancel={() => setConfirmDeleteSelected(false)} />
+      <ConfirmDialog open={!!confirmDeleteListId} title="Supprimer la liste" description="Êtes-vous sûr de vouloir supprimer cette liste ? Tous les contacts et campagnes liés seront également supprimés." confirmLabel="Supprimer" onConfirm={doDeleteList} onCancel={() => setConfirmDeleteListId(null)} />
       <AlertDialog open={alertImport} title="Impossible d'importer" description={alertImportMsg} onClose={() => setAlertImport(false)} />
 
       {showAddList && (
