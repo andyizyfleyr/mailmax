@@ -14,7 +14,8 @@ export function ContactsView({ contacts, lists, onRefresh }: {
   const [showAddList, setShowAddList] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [page, setPage] = useState(1);
-  const perPage = 20;
+  const [showAll, setShowAll] = useState(false);
+  const perPage = showAll ? filtered.length : 5;
   const [newEmail, setNewEmail] = useState(""); const [newName, setNewName] = useState(""); const [newList, setNewList] = useState("");
   const [newTags, setNewTags] = useState("");
 
@@ -178,7 +179,7 @@ export function ContactsView({ contacts, lists, onRefresh }: {
         ))}
       </Card>
 
-      {totalPages > 1 && (
+      {totalPages > 1 && !showAll && (
         <div className="flex items-center justify-center gap-2 pt-6">
           <button onClick={() => goTo(safePage - 1)} disabled={safePage <= 1}
             className="px-3 py-1.5 rounded-md text-xs font-medium border border-[hsl(var(--border))] text-[hsl(var(--muted))] hover:text-white hover:border-[hsl(var(--primary)/0.3)] transition-colors disabled:opacity-30 disabled:pointer-events-none">
@@ -193,6 +194,14 @@ export function ContactsView({ contacts, lists, onRefresh }: {
           <button onClick={() => goTo(safePage + 1)} disabled={safePage >= totalPages}
             className="px-3 py-1.5 rounded-md text-xs font-medium border border-[hsl(var(--border))] text-[hsl(var(--muted))] hover:text-white hover:border-[hsl(var(--primary)/0.3)] transition-colors disabled:opacity-30 disabled:pointer-events-none">
             Suivant →
+          </button>
+        </div>
+      )}
+      {filtered.length > 5 && (
+        <div className="flex items-center justify-center pt-3">
+          <button onClick={() => { setShowAll(!showAll); setPage(1); }}
+            className="px-3 py-1.5 rounded-md text-xs font-medium border border-[hsl(var(--border))] text-[hsl(var(--muted))] hover:text-white hover:border-[hsl(var(--primary)/0.3)] transition-colors">
+            {showAll ? "Paginer (5 par page)" : "Tout afficher"}
           </button>
         </div>
       )}
