@@ -5,7 +5,7 @@ export async function GET() {
   const [contactsRes, listsRes, campaignsRes, recordsRes] = await Promise.all([
     supabase.from("contacts").select("id", { count: "exact", head: true }),
     supabase.from("lists").select("id", { count: "exact", head: true }),
-    supabase.from("campaigns").select("name, stats_sent"),
+    supabase.from("campaigns").select("id, name, stats_sent, sent_at"),
     supabase.from("email_records").select("status, campaign_id, timestamp"),
   ]);
 
@@ -28,11 +28,19 @@ export async function GET() {
   const totalSent = campaignSent + composeSent;
 
   const dailyMap = new Map<string, number>();
+  const campaignIdsInRecords = new Set(records.filter(r => r.campaign_id).map(r => r.campaign_id));
 
   for (const r of records) {
     if (r.status !== "sent") continue;
     const day = (r.timestamp as string).slice(0, 10);
     dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
+  }
+
+  for (const c of campaigns) {
+    if (c.sent_at && c.stats_sent > 0 && !campaignIdsInRecords.has(c.id)) {
+      const day = (c.sent_at as string).slice(0, 10);
+      dailyMap.set(day, (dailyMap.get(day) || 0) + c.stats_sent);
+    }
   }
 
   const allDays = Array.from(dailyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
