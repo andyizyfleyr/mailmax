@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { useDropzone } from "react-dropzone";
-import { Plus, Trash2, Play, Loader2, CheckCircle, XCircle, RefreshCw, Send, Megaphone, X, Paperclip, Upload, Zap } from "lucide-react";
-import { EmailProvider, Campaign, ContactList, Contact, EmailAttachment } from "@/types";
+import { useState, useRef } from "react";
+import { Plus, Trash2, Play, Loader2, CheckCircle, XCircle, RefreshCw, Send, Megaphone, Zap } from "lucide-react";
+import { EmailProvider, Campaign, ContactList, Contact } from "@/types";
 import { Badge, Button, Card, Modal, ConfirmDialog, AlertDialog } from "@/components/ui";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 
@@ -28,23 +27,8 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
   const [provider] = useState<EmailProvider>("resend");
   const [fromName, setFromName] = useState("CrediWize");
   const [fromEmail, setFromEmail] = useState("contact@crediwize.com");
-  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   const editorRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: useCallback((files: File[]) => {
-      files.forEach(f => {
-        const r = new FileReader();
-        r.onload = e => {
-          const b64 = (e.target?.result as string).split(",")[1];
-          setAttachments(prev => [...prev, { name: f.name, content: b64, type: f.type }]);
-        };
-        r.readAsDataURL(f);
-      });
-    }, []),
-    noClick: true, noKeyboard: true,
-  });
 
   async function createCampaign() {
     if (!name || !subject || !listId || !fromEmail) {
@@ -59,11 +43,11 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail, attachments }),
+        body: JSON.stringify({ name, subject, html, listId, provider, fromName, fromEmail }),
       });
       const data = await res.json();
       if (!res.ok) { setAlertMsg("Erreur : " + (data.error || "Échec de création")); return; }
-      setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml(""); setAttachments([]);
+      setShowCreate(false); setStep(1); setName(""); setSubject(""); setHtml("");
       onRefresh();
       if (data.id) sendCampaign(data.id);
     } catch { setAlertMsg("Erreur de connexion au serveur."); }
@@ -268,37 +252,10 @@ export function CampaignsView({ campaigns, lists, contacts, onRefresh }: {
                     <div className="border border-[hsl(var(--border))] rounded-lg overflow-hidden">
                       <EditorToolbar exec={execCmd} onImage={handleImageClick} />
                       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
-                      <div {...getRootProps()} className="relative">
-                        <input {...getInputProps()} />
-                        <div ref={editorRef} contentEditable className="rich-editor min-h-[240px] p-5" onInput={e => setHtml(e.currentTarget.innerHTML)}
-                          data-placeholder="Écrivez votre message ici..." />
-                        {isDragActive && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--bg)/0.6)] backdrop-blur-sm">
-                            <div className="flex flex-col items-center text-[hsl(var(--primary))]">
-                              <Upload size={24} />
-                              <span className="text-xs font-medium">Déposez les fichiers</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <div ref={editorRef} contentEditable className="rich-editor min-h-[240px] p-5" onInput={e => setHtml(e.currentTarget.innerHTML)}
+                        data-placeholder="Écrivez votre message ici..." />
                     </div>
                   </div>
-                  {attachments.length > 0 && (
-                    <div className="space-y-1.5">
-                      <label className="label">Pièces jointes ({attachments.length})</label>
-                      <div className="flex flex-wrap gap-2">
-                        {attachments.map((a, i) => (
-                          <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[hsl(var(--s2))] border border-[hsl(var(--border))]">
-                            <Paperclip size={12} className="text-[hsl(var(--dim))]" />
-                            <span className="text-xs text-white max-w-[100px] truncate">{a.name}</span>
-                            <button onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))} className="text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))]">
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

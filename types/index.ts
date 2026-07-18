@@ -37,7 +37,6 @@ export interface Campaign {
     clicks: number;
     unsubscribes: number;
   };
-  attachments: EmailAttachment[];
   errorMessage?: string;
 }
 
@@ -77,7 +76,6 @@ export interface SendPayload {
   to: string;
   subject: string;
   html: string;
-  attachments?: EmailAttachment[];
 }
 
 export interface BulkSendPayload {

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { useDropzone } from "react-dropzone";
-import { Paperclip, Upload, X, Loader2, Send } from "lucide-react";
-import { EmailProvider, ContactList, EmailAttachment } from "@/types";
+import { useState, useRef } from "react";
+import { Loader2, Send } from "lucide-react";
+import { EmailProvider, ContactList } from "@/types";
 import { Card, Button } from "@/components/ui";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 
@@ -14,25 +13,10 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [html, setHtml] = useState("");
-  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [msg, setMsg] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: useCallback((files: File[]) => {
-      files.forEach(f => {
-        const r = new FileReader();
-        r.onload = e => {
-          const b64 = (e.target?.result as string).split(",")[1];
-          setAttachments(prev => [...prev, { name: f.name, content: b64, type: f.type }]);
-        };
-        r.readAsDataURL(f);
-      });
-    }, []),
-    noClick: true, noKeyboard: true,
-  });
 
   function execCmd(cmd: string, val?: string) {
     document.execCommand(cmd, false, val);
@@ -74,13 +58,13 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
       const res = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, from, fromName, to, subject, html, attachments }),
+        body: JSON.stringify({ provider, from, fromName, to, subject, html }),
       });
       const data = await res.json();
       if (data.success) {
         setStatus("success");
         setMsg("Email envoyé avec succès !");
-        setTo(""); setSubject(""); setHtml(""); setAttachments([]);
+        setTo(""); setSubject(""); setHtml("");
         if (editorRef.current) editorRef.current.innerHTML = "";
         onSent();
       } else { setStatus("error"); setMsg(data.error || "Une erreur est survenue."); }
@@ -152,26 +136,6 @@ export function ComposeView({ lists, onSent }: { lists: ContactList[]; onSent: (
 
         <div className="space-y-4">
           <Card className="p-5 space-y-5 sticky top-24">
-            <div className="space-y-2">
-              <label className="label flex items-center gap-2"><Paperclip size={13} /> Pièces jointes</label>
-              <div {...getRootProps()} className={`rounded-lg p-4 border-2 border-dashed transition-all cursor-pointer flex flex-col items-center gap-2 ${isDragActive ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary)/0.05)]" : "border-[hsl(var(--border))] hover:border-[hsl(var(--dim))]"}`}>
-                <input {...getInputProps()} />
-                <Upload size={20} className={isDragActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--dim))]"} />
-                <p className="text-[10px] text-[hsl(var(--muted))]">Déposez vos fichiers</p>
-              </div>
-              {attachments.length > 0 && (
-                <div className="space-y-1.5 mt-3">
-                  {attachments.map((a, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-[hsl(var(--s2))] border border-[hsl(var(--border))]">
-                      <span className="text-xs text-[hsl(var(--muted))] truncate">{a.name}</span>
-                      <button onClick={() => setAttachments(p => p.filter((_, j) => j !== i))} className="text-[hsl(var(--dim))] hover:text-[hsl(var(--danger))]">
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
             <Button variant="primary" className="w-full justify-center py-3" disabled={status === "loading"} onClick={handleSend}>
               {status === "loading" ? <><Loader2 size={16} className="spin" /> Envoi...</> : <><Send size={16} /> Envoyer</>}

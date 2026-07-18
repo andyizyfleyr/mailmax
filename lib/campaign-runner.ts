@@ -51,7 +51,6 @@ export async function runCampaign(campaignId: string) {
           to: contact.email,
           subject: campaign.subject,
           html: trackedHtml,
-          attachments: campaign.attachments || [],
         });
         
         await supabase.from("email_records").insert({
