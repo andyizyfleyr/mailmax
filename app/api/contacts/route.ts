@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   const [contactsRes, listsRes] = await Promise.all([
-    supabase.from("contacts").select("*").order("created_at", { ascending: false }),
+    supabase.from("contacts").select("*").order("created_at", { ascending: false }).limit(100000),
     supabase.from("lists").select("*").order("created_at", { ascending: false }),
   ]);
 
