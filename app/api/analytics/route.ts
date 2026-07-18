@@ -48,7 +48,11 @@ export async function GET() {
   let activity: { date: string; sent: number }[];
 
   if (allDays.length === 0) {
-    activity = [{ date: "Aujourd'hui", sent: 0 }];
+    const today = new Date();
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    const tLabel = today.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+    const yLabel = yesterday.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+    activity = [{ date: yLabel, sent: 0 }, { date: tLabel, sent: 0 }];
   } else {
     const firstDate = new Date(allDays[0][0] + "T00:00:00Z");
     const today = new Date();
@@ -58,6 +62,12 @@ export async function GET() {
     while (cursor <= today) {
       days.push(cursor.toISOString().slice(0, 10));
       cursor.setDate(cursor.getDate() + 1);
+    }
+
+    if (days.length < 2) {
+      const prev = new Date(days[0] + "T00:00:00Z");
+      prev.setDate(prev.getDate() - 1);
+      days.unshift(prev.toISOString().slice(0, 10));
     }
 
     activity = days.map(dateStr => {
